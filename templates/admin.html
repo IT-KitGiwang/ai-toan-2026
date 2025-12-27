@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý kiến thức và đánh giá thái độ & năng lực học sinh</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset cơ bản */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4a6bff;
+            --primary-light: #6c8eff;
+            --secondary: #ff6b8b;
+            --secondary-light: #ff9a9e;
+            --accent: #facc15;
+            --accent-hover: #eab308;
+            --success: #10b981;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --warning: #f59e0b;
+            --warning-hover: #d97706;
+            --light: #f9fafb;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --border: #e5e7eb;
+            --card-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f7ff 0%, #f8f0ff 100%);
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(74, 107, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 107, 139, 0.1) 0%, transparent 50%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Header Card */
+        .header-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 20px;
+            padding: 30px 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(74, 107, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            border: none;
+        }
+
+        .header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: white;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+
+        .header-icon {
+            font-size: 36px;
+            animation: bounce 2s infinite;
+        }
+
+        .header-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        /* Card */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 18px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            border-radius: 18px 0 0 18px;
+        }
+
+        h2, h3 {
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        h2 i, h3 i {
+            color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Button */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-yellow {
+            background: linear-gradient(135deg, var(--accent), #fbbf24);
+        }
+        .btn-yellow:hover {
+            background: linear-gradient(135deg, var(--accent-hover), #f59e0b);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(250, 204, 21, 0.3);
+        }
+
+        .btn-red {
+            background: linear-gradient(135deg, var(--danger), #f87171);
+        }
+        .btn-red:hover {
+            background: linear-gradient(135deg, var(--danger-hover), #ef4444);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-upload {
+            background: linear-gradient(135deg, var(--warning), #fb923c);
+        }
+        .btn-upload:hover {
+            background: linear-gradient(135deg, var(--warning-hover), #f97316);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-logout {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            z-index: 10;
+        }
+
+        /* Flash messages */
+        .flash-message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.5s ease;
+            border-left: 5px solid;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .flash-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border-left-color: var(--success);
+        }
+
+        .flash-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border-left-color: var(--danger);
+        }
+
+        /* Form */
+        .upload-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s;
+        }
+
+        .upload-form:hover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+
+        .file-input-wrapper {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background-color: white;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        input[type="file"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 107, 255, 0.2);
+            outline: none;
+        }
+
+        /* PDF list */
+        .pdf-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .pdf-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border-left: 5px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .pdf-list li:hover {
+            background: #f0f9ff;
+            transform: translateX(5px);
+        }
+
+        .pdf-list li span {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+            color: var(--dark);
+            max-width: 70%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .pdf-icon {
+            color: var(--danger);
+            font-size: 20px;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            margin-top: 15px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background-color: white;
+            min-width: 800px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        }
+
+        th {
+            padding: 18px 15px;
+            text-align: left;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th:last-child {
+            border-right: none;
+        }
+
+        th i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.3s;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        td {
+            padding: 16px 15px;
+            vertical-align: top;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+
+        /* Column widths */
+        th:nth-child(1), td:nth-child(1) { width: 8%; }
+        th:nth-child(2), td:nth-child(2) { width: 22%; }
+        th:nth-child(3), td:nth-child(3) { width: 15%; }
+        th:nth-child(4), td:nth-child(4) { width: 30%; }
+        th:nth-child(5), td:nth-child(5) { width: 25%; }
+
+        /* Styled cells */
+        .level-cell {
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .lydo-cell, .history-cell {
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 12px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            border: 1px solid var(--border);
+        }
+
+        /* Scrollbar */
+        .lydo-cell::-webkit-scrollbar,
+        .history-cell::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .lydo-cell::-webkit-scrollbar-track,
+        .history-cell::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .lydo-cell::-webkit-scrollbar-thumb,
+        .history-cell::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        /* Math decorations */
+        .math-deco {
+            position: fixed;
+            pointer-events: none;
+            z-index: -1;
+            font-size: 24px;
+            color: rgba(74, 107, 255, 0.1);
+            font-weight: bold;
+        }
+
+        /* Animations */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .container {
+                padding: 0 10px;
+            }
+            
+            .header-card {
+                padding: 25px 20px;
+            }
+            
+            h1 {
+                font-size: 26px;
+            }
+            
+            .card {
+                padding: 25px 20px;
+            }
+            
+            .upload-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .btn-logout {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-top: 15px;
+                width: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 22px;
+            }
+            
+            h2 {
+                font-size: 20px;
+            }
+            
+            th, td {
+                padding: 12px 10px;
+                font-size: 13px;
+            }
+            
+            .pdf-list li span {
+                max-width: 60%;
+            }
+            
+            .header-title {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Math decorations -->
+    <div class="math-deco" style="top: 10%; left: 5%;">∫</div>
+    <div class="math-deco" style="top: 15%; right: 8%;">∑</div>
+    <div class="math-deco" style="bottom: 20%; left: 10%;">π</div>
+    <div class="math-deco" style="bottom: 15%; right: 5%;">∞</div>
+    <div class="math-deco" style="top: 50%; left: 3%;">√</div>
+    <div class="math-deco" style="top: 60%; right: 3%;">θ</div>
+    
+    <div class="container">
+        <!-- Header -->
+        <div class="header-card">
+            <div class="header-content">
+                <div class="header-title">
+                    <i class="fas fa-graduation-cap header-icon"></i>
+                    <h1>Quản lý kiến thức và đánh giá thái độ & năng lực học sinh</h1>
+                    <i class="fas fa-chart-line header-icon" style="animation-delay: 0.5s;"></i>
+                </div>
+                <p class="header-subtitle">Hệ thống Trợ lý AI Học Toán - Toán Anh Việt tích hợp đánh giá năng lực</p>
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-red btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </a>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ 'flash-success' if category=='success' else 'flash-error' }}">
+                        <i class="fas fa-{{ 'check-circle' if category=='success' else 'exclamation-circle' }}"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Quản lý PDF -->
+        <div class="card">
+            <h2><i class="fas fa-book-open"></i> Quản lý Tài liệu Toán THCS</h2>
+            
+            <form method="POST" enctype="multipart/form-data" class="upload-form">
+                <div class="file-input-wrapper">
+                    <input type="file" name="file" accept=".pdf" required>
+                </div>
+                <button type="submit" class="btn btn-upload">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload PDF mới
+                </button>
+            </form>
+
+            <h3><i class="fas fa-list"></i> Danh sách tài liệu hiện có</h3>
+            <ul class="pdf-list">
+                {% for pdf in pdf_files %}
+                <li>
+                    <span>
+                        <i class="fas fa-file-pdf pdf-icon"></i>
+                        {{ pdf }}
+                    </span>
+                    <form method="POST" action="{{ url_for('delete_pdf', filename=pdf) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-red" onclick="return confirm('Bạn có chắc muốn xóa file {{ pdf }}?');">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </form>
+                </li>
+                {% endfor %}
+                {% if not pdf_files %}
+                <li style="justify-content: center; color: var(--gray);">
+                    <i class="fas fa-inbox"></i> Chưa có tài liệu nào được upload
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Bảng kết quả học tập -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <h2 style="margin: 0;"><i class="fas fa-chart-bar"></i> Kết quả Học tập của Học sinh</h2>
+                <a href="{{ url_for('export_csv') }}" class="btn btn-yellow">
+                    <i class="fas fa-file-download"></i> Tải xuống CSV
+                </a>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag"></i> ID</th>
+                            <th><i class="fas fa-user"></i> Tên đăng nhập</th>
+                            <th><i class="fas fa-star"></i> Năng lực</th>
+                            <th><i class="fas fa-comment-dots"></i> Lý do đánh giá</th>
+                            <th><i class="fas fa-history"></i> Lịch sử học tập</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in user_data %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td><strong>{{ user.username }}</strong></td>
+                            <td>
+                                <span class="level-cell">
+                                    <i class="fas fa-chart-line"></i> {{ user.level }}
+                                </span>
+                            </td>
+                            <td><div class="lydo-cell">{{ user.lydo }}</div></td>
+                            <td><div class="history-cell">{{ user.history }}</div></td>
+                        </tr>
+                        {% endfor %}
+                        {% if not user_data %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: var(--gray);">
+                                <i class="fas fa-user-graduate" style="font-size: 48px; margin-bottom: 15px; display: block; color: #cbd5e1;"></i>
+                                Chưa có dữ liệu học sinh. Hãy bắt đầu đánh giá!
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Hiệu ứng tương tác
+        document.addEventListener('DOMContentLoaded', function() {
+            // Thêm hiệu ứng cho các card
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // Hiệu ứng cho các item PDF
+            const pdfItems = document.querySelectorAll('.pdf-list li');
+            pdfItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(5px)';
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0)';
+                });
+            });
+            
+            // Tự động ẩn flash message sau 5 giây
+            setTimeout(function() {
+                const flashMessages = document.querySelectorAll('.flash-message');
+                flashMessages.forEach(message => {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateY(-20px)';
+                    setTimeout(() => message.remove(), 300);
+                });
+            }, 5000);
+            
+            // Hiệu ứng khi upload file
+            const fileInput = document.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    if (this.files.length > 0) {
+                        this.parentElement.style.borderColor = '#10b981';
+                        this.parentElement.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)';
+                        
+                        // Reset sau 2 giây
+                        setTimeout(() => {
+                            this.parentElement.style.borderColor = '';
+                            this.parentElement.style.boxShadow = '';
+                        }, 2000);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

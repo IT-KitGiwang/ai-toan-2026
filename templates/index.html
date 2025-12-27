@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI hỗ trợ học Toán Anh - Việt THCS</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- MathJax -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']], processEscapes: true },
+            showProcessingMessages: false,
+            messageStyle: "none"
+        });
+    </script>
+    <style>
+        :root {
+            --primary: #4a6bff;
+            --primary-light: #6c8eff;
+            --primary-dark: #3a5bff;
+            --secondary: #ff6b8b;
+            --secondary-light: #ff9a9e;
+            --accent: #facc15;
+            --accent-hover: #eab308;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --light: #f9fafb;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --border: #e5e7eb;
+            --card-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f7ff 0%, #f8f0ff 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 10px 30px rgba(74, 107, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            max-width: 800px;
+        }
+
+        /* Main Layout */
+        .container {
+            display: flex;
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+            min-height: calc(100vh - 100px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            border-radius: 20px 0 0 20px;
+        }
+
+        .sidebar-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--dark);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+            background: linear-gradient(135deg, #f0f9ff, #e6f7ff);
+        }
+
+        .nav-btn i {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-btn.management {
+            background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+            border-color: #7dd3fc;
+        }
+
+        .nav-btn.logout {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border-color: #fca5a5;
+        }
+
+        /* Logo Section */
+        .logo-section {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 2px dashed var(--border);
+            margin-top: 20px;
+        }
+
+        .logo-img {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--primary);
+            box-shadow: 0 10px 25px rgba(74, 107, 255, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--primary);
+            background: #e0f2fe;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #f8fafc;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(74, 107, 255, 0.03) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 107, 139, 0.03) 0%, transparent 20%);
+        }
+
+        /* Message Styles */
+        .message {
+            max-width: 85%;
+            padding: 20px;
+            border-radius: 20px;
+            line-height: 1.6;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: linear-gradient(135deg, white, #f8fafc);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--primary);
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-left: 5px solid var(--accent);
+        }
+
+        .welcome-message {
+            background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+            border: 1px solid #7dd3fc;
+            border-left: 5px solid var(--success);
+            max-width: 90%;
+        }
+
+        .welcome-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-arithmetic {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+        }
+
+        .badge-algebra {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            color: white;
+        }
+
+        .badge-geometry {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: white;
+        }
+
+        /* Chat Input */
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 18px 25px;
+            border: 2px solid var(--border);
+            border-radius: 15px;
+            font-size: 16px;
+            background: #f8fafc;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 107, 255, 0.2);
+            background: white;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 18px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(74, 107, 255, 0.3);
+        }
+
+        .send-btn:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(74, 107, 255, 0.4);
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 20px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            max-width: 120px;
+            margin-top: 10px;
+        }
+
+        .typing-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+        }
+
+        /* Math Decorations */
+        .math-decoration {
+            position: fixed;
+            font-size: 24px;
+            font-weight: bold;
+            color: rgba(74, 107, 255, 0.1);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* User Level Indicator */
+        .level-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--accent), #fbbf24);
+            color: var(--dark);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(250, 204, 21, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        /* Scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .header-title {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+            
+            .header-title {
+                font-size: 20px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .chat-messages {
+                padding: 15px;
+            }
+            
+            .message {
+                max-width: 95%;
+                padding: 15px;
+            }
+            
+            .chat-input-container {
+                padding: 15px;
+                flex-direction: column;
+            }
+            
+            .chat-input {
+                width: 100%;
+            }
+            
+            .send-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .level-indicator {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 10px auto;
+                width: fit-content;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Math Decorations -->
+    <div class="math-decoration" style="top: 15%; left: 3%;">∫</div>
+    <div class="math-decoration" style="top: 20%; right: 5%;">∑</div>
+    <div class="math-decoration" style="bottom: 25%; left: 5%;">π</div>
+    <div class="math-decoration" style="bottom: 15%; right: 3%;">∞</div>
+    <div class="math-decoration" style="top: 50%; left: 2%;">√</div>
+    <div class="math-decoration" style="top: 60%; right: 2%;">θ</div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-title">
+                <i class="fas fa-robot"></i>
+                <span>💬 AI Giáo Viên Hỗ Trợ Học Toán Song Ngữ THCS</span>
+                <i class="fas fa-calculator"></i>
+            </div>
+            <p class="header-subtitle">Toán Anh - Việt tích hợp đánh giá năng lực học sinh</p>
+        </div>
+    </header>
+
+    <!-- Level Indicator -->
+    <div class="level-indicator" id="level-indicator">
+        <i class="fas fa-chart-line"></i>
+        <span>Năng lực: </span>
+        <span id="user-level" class="font-bold">{{ user_level }}</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2 class="sidebar-title">
+                <i class="fas fa-cogs"></i>
+                Các tính năng khác
+            </h2>
+
+            <nav class="sidebar-nav">
+                <a href="/admin" class="nav-btn management">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Quản lý năng lực học sinh</span>
+                </a>
+
+                <a href="/logout" class="nav-btn logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </nav>
+
+            <div class="logo-section">
+        
+                <div class="info-item">
+                    <span class="info-label">Đơn vị dự thi:</span>
+                    <span>Trường THCS Hoài Phú</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">HS thực hiện:</span>
+                    <span>Phạm Lê Thế Dân</span>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">GVHD:</span>
+                    <span>Nguyễn Phương Tây</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Chat Area -->
+        <main class="chat-area">
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="chat-messages">
+                <!-- Welcome Message -->
+                <div class="message welcome-message">
+                    <p>👋 <strong>Xin chào!</strong> Thầy là trợ lý <span class="font-bold" style="color: var(--primary);">AI Toán THCS</span>.</p>
+                    <p class="mt-2">Hãy nhập câu hỏi về các chủ đề Toán học để thầy giúp nhé!</p>
+                    
+                    <div class="welcome-badges">
+                        <span class="badge badge-arithmetic">
+                            <i class="fas fa-calculator"></i> Số học
+                        </span>
+                        <span class="badge badge-algebra">
+                            <i class="fas fa-superscript"></i> Đại số
+                        </span>
+                        <span class="badge badge-geometry">
+                            <i class="fas fa-shapes"></i> Hình học
+                        </span>
+                        <span class="badge" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: white;">
+                            <i class="fas fa-chart-bar"></i> Xác suất
+                        </span>
+                    </div>
+                    
+                    <p class="mt-3 text-sm text-gray-600">
+                        <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Bạn có thể hỏi bằng tiếng Việt hoặc tiếng Anh, AI sẽ tự động hiểu và giải thích chi tiết!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="chat-input-container">
+                <input type="text" id="message" name="message" 
+                       placeholder="Nhập câu hỏi Toán học của bạn..." 
+                       class="chat-input"
+                       autocomplete="off">
+                <button type="submit" id="send-btn" class="send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    Gửi câu hỏi
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // DOM Elements
+        const chatForm = document.getElementById('send-btn');
+        const messageInput = document.getElementById('message');
+        const chatMessages = document.getElementById('chat-messages');
+        const levelIndicator = document.getElementById('user-level');
+        let previousLevel = '{{ user_level }}';
+
+        // Add user message to chat
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user-message';
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Add AI message to chat
+        function addAIMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message mathjax-container';
+            messageDiv.innerHTML = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Process MathJax
+            if (window.MathJax) {
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, messageDiv]);
+            }
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <span style="margin-left: 10px; color: var(--gray); font-size: 14px;">AI đang trả lời...</span>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return typingDiv;
+        }
+
+        // Handle form submission
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addUserMessage(message);
+            messageInput.value = '';
+            
+            // Show typing indicator
+            const typingIndicator = showTypingIndicator();
+
+            try {
+                // Send request to server
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                // Remove typing indicator
+                chatMessages.removeChild(typingIndicator);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Add AI response
+                addAIMessage(data.response || '⚠️ Xin lỗi, tôi chưa thể trả lời câu hỏi này. Vui lòng thử lại.');
+                
+                // Update user level if changed
+                if (data.level && data.level !== previousLevel) {
+                    levelIndicator.textContent = data.level;
+                    previousLevel = data.level;
+                    
+                    // Show level change notification
+                    const levelChangeMsg = document.createElement('div');
+                    levelChangeMsg.className = 'message ai-message';
+                    levelChangeMsg.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px; color: var(--success);">
+                            <i class="fas fa-trophy"></i>
+                            <span><strong>Chúc mừng!</strong> Năng lực của bạn đã được cập nhật: <strong>${data.level}</strong></span>
+                        </div>
+                    `;
+                    chatMessages.appendChild(levelChangeMsg);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                chatMessages.removeChild(typingIndicator);
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'message ai-message';
+                errorDiv.innerHTML = `
+                    <div style="color: var(--danger);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Lỗi kết nối:</strong> Vui lòng kiểm tra kết nối mạng và thử lại.
+                    </div>
+                `;
+                chatMessages.appendChild(errorDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Focus back on input
+            messageInput.focus();
+        }
+
+        // Event Listeners
+        chatForm.addEventListener('click', handleSubmit);
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleSubmit(e);
+            }
+        });
+
+        // Add some sample questions on click
+        messageInput.addEventListener('click', function() {
+            if (this.value === '' && chatMessages.children.length === 1) {
+                // Add some quick question suggestions
+                const suggestions = [
+                    "Giải phương trình: $2x + 5 = 15$",
+                    "Tính diện tích hình tròn bán kính 7cm",
+                    "What is the Pythagorean theorem?",
+                    "Tìm ước chung lớn nhất của 24 và 36"
+                ];
+                
+                const suggestionsDiv = document.createElement('div');
+                suggestionsDiv.className = 'message ai-message';
+                suggestionsDiv.innerHTML = `
+                    <p><strong>💡 Gợi ý câu hỏi:</strong></p>
+                    <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${suggestions.map(q => 
+                            `<button class="suggestion-btn" 
+                                style="background: var(--primary-light); color: white; border: none; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 14px;"
+                                onclick="document.getElementById('message').value = '${q}'; document.getElementById('message').focus();">
+                                ${q.substring(0, 30)}...
+                            </button>`
+                        ).join('')}
+                    </div>
+                `;
+                chatMessages.appendChild(suggestionsDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        });
+
+        // Initial focus on input
+        messageInput.focus();
+    </script>
+</body>
+</html>

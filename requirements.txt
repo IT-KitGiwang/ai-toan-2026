@@ -1,0 +1,13 @@
+Flask
+Flask-Session
+Flask-SQLAlchemy
+psycopg2-binary
+python-dotenv
+google-generativeai
+PyPDF2
+numpy
+scikit-learn
+Werkzeug
+Flask-Migrate
+pandas
+gunicorn

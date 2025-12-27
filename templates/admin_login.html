@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đăng nhập Admin - Trợ lý AI Học Toán</title>
+<style>
+    /* Reset và cài đặt cơ bản */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+       body {
+      background: linear-gradient( 
+        rgba(252, 88, 88, 0.92) 14%, 
+        rgba(77, 104, 253, 0.92) 30%),
+        url('https://image.slidesdocs.com/responsive-images/background/education-cute-mathematics-notebook-ruler-pink-powerpoint-background_829deb8b68__783_440.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      min-height: 100vh;
+      font-family: 'Segoe UI', 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 420px;
+        perspective: 1000px;
+    }
+
+    .login-card {
+        background: #ffffff;
+        padding: 40px 35px;
+        border-radius: 20px;
+        box-shadow: 
+            0 15px 35px rgba(0, 82, 204, 0.1),
+            0 5px 15px rgba(0, 0, 0, 0.05),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+        text-align: center;
+        transition: transform 0.5s ease, box-shadow 0.5s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 
+            0 20px 40px rgba(0, 82, 204, 0.15),
+            0 10px 20px rgba(0, 0, 0, 0.08),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+    }
+
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, #0052cc, #4dabf7);
+    }
+
+    .logo-container {
+        margin-bottom: 25px;
+    }
+
+    .logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0052cc, #4dabf7);
+        color: white;
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        box-shadow: 0 5px 15px rgba(0, 82, 204, 0.2);
+    }
+
+    .logo-text {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0052cc;
+        margin-bottom: 5px;
+        letter-spacing: 0.5px;
+    }
+
+    .logo-subtext {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 30px;
+        line-height: 1.4;
+    }
+
+    .login-card h2 {
+        color: #003d99;
+        margin-bottom: 30px;
+        font-size: 24px;
+        font-weight: 700;
+        position: relative;
+        padding-bottom: 10px;
+    }
+
+    .login-card h2::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 3px;
+        background: linear-gradient(90deg, #0052cc, #4dabf7);
+        border-radius: 2px;
+    }
+
+    .input-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+
+    .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .input-container {
+        position: relative;
+    }
+
+    .input-container i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #4dabf7;
+        font-size: 18px;
+    }
+
+    .login-card input[type="text"],
+    .login-card input[type="password"] {
+        width: 100%;
+        padding: 15px 15px 15px 50px;
+        border-radius: 12px;
+        border: 2px solid #e6f0ff;
+        background-color: #f8fbff;
+        font-size: 16px;
+        color: #333;
+        transition: all 0.3s;
+    }
+
+    .login-card input[type="text"]:focus,
+    .login-card input[type="password"]:focus {
+        border-color: #4dabf7;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
+        outline: none;
+    }
+
+    .login-card input[type="text"]::placeholder,
+    .login-card input[type="password"]::placeholder {
+        color: #999;
+    }
+
+    .login-card button {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #0052cc, #4dabf7);
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 10px;
+        letter-spacing: 0.5px;
+    }
+
+    .login-card button:hover {
+        background: linear-gradient(135deg, #0047b3, #339af0);
+        box-shadow: 0 7px 20px rgba(0, 82, 204, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .login-card button:active {
+        transform: translateY(0);
+    }
+
+    .flash {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        text-align: left;
+        border-left: 4px solid;
+        animation: fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .flash.error {
+        background-color: #fff5f5;
+        color: #e53e3e;
+        border-left-color: #e53e3e;
+    }
+
+    .flash.success {
+        background-color: #f0fff4;
+        color: #38a169;
+        border-left-color: #38a169;
+    }
+
+    .register-link {
+        margin-top: 25px;
+        display: block;
+        font-size: 15px;
+        color: #4dabf7;
+        text-decoration: none;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
+
+    .register-link:hover {
+        color: #0052cc;
+        text-decoration: underline;
+    }
+
+    .footer-note {
+        margin-top: 30px;
+        font-size: 12px;
+        color: #888;
+        line-height: 1.5;
+        border-top: 1px solid #f0f0f0;
+        padding-top: 15px;
+    }
+
+    @media(max-width: 480px) {
+        .login-card {
+            padding: 30px 25px;
+            border-radius: 15px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+        }
+        
+        .logo-text {
+            font-size: 20px;
+        }
+        
+        .login-card h2 {
+            font-size: 22px;
+        }
+    }
+
+    /* Hiệu ứng toán học nhẹ */
+    .math-icon {
+        position: absolute;
+        opacity: 0.05;
+        font-size: 80px;
+        font-weight: bold;
+        color: #0052cc;
+        z-index: 0;
+    }
+    
+    .math-icon-1 {
+        top: 20px;
+        right: 30px;
+    }
+    
+    .math-icon-2 {
+        bottom: 20px;
+        left: 30px;
+        transform: rotate(45deg);
+    }
+</style>
+<!-- Thêm Font Awesome cho biểu tượng -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Biểu tượng toán học trang trí -->
+            <div class="math-icon math-icon-1">∫</div>
+            <div class="math-icon math-icon-2">∑</div>
+            
+            <div class="logo-container">
+                <div class="logo">AI</div>
+                <div class="logo-text">Trợ lý AI Học Toán</div>
+                <div class="logo-subtext">Toán Anh - Việt tích hợp đánh giá năng lực</div>
+            </div>
+            
+            <h2>Đăng nhập Quản trị</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="/admin">
+                <div class="input-group">
+                    <label for="username"><i class="fas fa-user"></i> Tên đăng nhập</label>
+                    <div class="input-container">
+                        <i class="fas fa-user-circle"></i>
+                        <input type="text" id="username" name="username" placeholder="Nhập tên đăng nhập" required>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="password"><i class="fas fa-key"></i> Mật khẩu</label>
+                    <div class="input-container">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
+                    </div>
+                </div>
+                
+                <button type="submit">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </button>
+            </form>
+            
+            <a href="{{ url_for('register') }}" class="register-link">
+                <i class="fas fa-user-plus"></i> Chưa có tài khoản? Đăng ký ngay
+            </a>
+            
+            <div class="footer-note">
+                Hệ thống dành cho quản trị viên phần mềm Trợ lý AI Học Toán Anh-Việt. 
+                Vui lòng không chia sẻ thông tin đăng nhập.
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Hiệu ứng tương tác nhẹ
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input');
+            
+            inputs.forEach(input => {
+                // Hiệu ứng focus
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                });
+                
+                // Hiệu ứng blur
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+            });
+            
+            // Hiệu ứng cho nút đăng nhập
+            const loginBtn = document.querySelector('button');
+            if (loginBtn) {
+                loginBtn.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                
+                loginBtn.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
