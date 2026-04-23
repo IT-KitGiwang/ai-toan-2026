@@ -3,10 +3,8 @@ Flask-Session
 Flask-SQLAlchemy
 psycopg2-binary
 python-dotenv
-google-generativeai
+openai
 PyPDF2
-numpy
-scikit-learn
 Werkzeug
 Flask-Migrate
 pandas

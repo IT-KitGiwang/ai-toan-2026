@@ -1,14 +1,11 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
-import google.generativeai as genai
+from openai import OpenAI
 import PyPDF2
 import re
 from dotenv import load_dotenv
 load_dotenv()
 import os
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-import time
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -17,19 +14,26 @@ import pandas as pd
 from io import BytesIO
 from werkzeug.utils import secure_filename
 # ================== CẤU HÌNH & KHỞI TẠO ==================
-api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    raise ValueError("❌ Không tìm thấy GEMINI_API_KEY trong biến môi trường!")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+if not OPENROUTER_API_KEY:
+    raise ValueError("❌ Không tìm thấy OPENROUTER_API_KEY trong biến môi trường!")
 
-genai.configure(api_key=api_key)
+# Khởi tạo OpenAI client trỏ đến OpenRouter
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=OPENROUTER_API_KEY,
+)
 
-GENERATION_MODEL = 'gemini-2.5-flash-lite'
-EMBEDDING_MODEL = 'text-embedding-004'
+GENERATION_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
+if not app.secret_key:
+    raise ValueError("❌ Không tìm thấy FLASK_SECRET_KEY trong biến môi trường!")
 app.config["SESSION_TYPE"] = "filesystem"
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+if not app.config['SQLALCHEMY_DATABASE_URI']:
+    raise ValueError("❌ Không tìm thấy DATABASE_URL trong biến môi trường!")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -59,14 +63,13 @@ with app.app_context():
     db.create_all()
     print("✅ Đã kiểm tra/tạo bảng taikhoan_hocsinh trong schema public")
 
-# Biến toàn cục cho RAG
-RAG_DATA = {
-    "chunks": [],
-    "embeddings": np.array([]),
+# Biến toàn cục lưu nội dung tài liệu PDF
+DOCUMENT_CONTEXT = {
+    "text": "",
     "is_ready": False
 }
 
-# ================== ĐỌC & CHIA CHUNKS ==================
+# ================== ĐỌC TÀI LIỆU PDF ==================
 def extract_pdf_text(pdf_path):
     text = ""
     try:
@@ -78,73 +81,40 @@ def extract_pdf_text(pdf_path):
         print(f"⚠️ Lỗi khi đọc PDF {pdf_path}: {e}")
     return text
 
-def create_chunks_from_directory(directory='./static', chunk_size=400):
-    all_chunks = []
+def load_all_documents(directory='./static'):
+    """Đọc toàn bộ nội dung PDF và ghép thành một chuỗi văn bản."""
+    all_text = ""
     if not os.path.exists(directory):
         print(f"Thư mục {directory} không tồn tại.")
-        return []
+        return ""
     pdf_files = [f for f in os.listdir(directory) if f.endswith('.pdf')]
     print(f"🔍 Tìm thấy {len(pdf_files)} tệp PDF trong {directory}...")
     for filename in pdf_files:
         pdf_path = os.path.join(directory, filename)
         content = extract_pdf_text(pdf_path)
-        for i in range(0, len(content), chunk_size):
-            chunk = content[i:i + chunk_size].strip()
-            if chunk:
-                all_chunks.append(f"[Nguồn: {filename}] {chunk}")
-    print(f"✅ Đã tạo tổng cộng {len(all_chunks)} đoạn văn (chunks).")
-    return all_chunks
+        if content.strip():
+            all_text += f"\n\n===== [Tài liệu: {filename}] =====\n{content}"
+    total_chars = len(all_text)
+    print(f"✅ Đã đọc tổng cộng {total_chars:,} ký tự từ {len(pdf_files)} tài liệu.")
+    return all_text
 
-def embed_with_retry(texts, model_name, max_retries=5):
-    all_embeddings = []
-    for text in texts:
-        for attempt in range(max_retries):
-            try:
-                result = genai.embed_content(model=model_name, content=text)
-                all_embeddings.append(result["embedding"])
-                break
-            except Exception as e:
-                if attempt < max_retries - 1:
-                    print(f"⚠️ Thử lại lần {attempt+1}: {e}")
-                    time.sleep(2 ** attempt)
-                else:
-                    print(f"💥 Thất bại sau {max_retries} lần: {e}")
-                    raise
-    return np.array(all_embeddings)
-
-def initialize_rag_data():
-    global RAG_DATA
-    print("⏳ Đang khởi tạo dữ liệu RAG...")
-    chunks = create_chunks_from_directory()
-    if not chunks:
-        print("Không có dữ liệu để nhúng.")
+def initialize_documents():
+    """Tải toàn bộ tài liệu PDF vào bộ nhớ."""
+    global DOCUMENT_CONTEXT
+    print("⏳ Đang tải tài liệu...")
+    doc_text = load_all_documents()
+    if not doc_text.strip():
+        print("⚠️ Không có tài liệu PDF nào để tải.")
+        DOCUMENT_CONTEXT["text"] = ""  # Xóa sạch text cũ
+        DOCUMENT_CONTEXT["is_ready"] = False
         return
-    try:
-        embeddings = embed_with_retry(chunks, EMBEDDING_MODEL)
-        RAG_DATA.update({
-            "chunks": chunks,
-            "embeddings": embeddings,
-            "is_ready": True
-        })
-        print("🎉 Khởi tạo RAG hoàn tất!")
-    except Exception as e:
-        print(f"❌ KHÔNG THỂ KHỞI TẠO RAG: {e}")
-        RAG_DATA["is_ready"] = False
+    DOCUMENT_CONTEXT.update({
+        "text": doc_text,
+        "is_ready": True
+    })
+    print("🎉 Tải tài liệu hoàn tất!")
 
-initialize_rag_data()
-
-# ================== TRUY XUẤT NGỮ CẢNH ==================
-def retrieve_context(query, top_k=3):
-    if not RAG_DATA["is_ready"]:
-        return "Không có tài liệu RAG nào được tải."
-    try:
-        query_vec = embed_with_retry([query], EMBEDDING_MODEL)[0].reshape(1, -1)
-        sims = cosine_similarity(query_vec, RAG_DATA["embeddings"])[0]
-        top_idxs = np.argsort(sims)[-top_k:][::-1]
-        return "\n\n---\n\n".join([RAG_DATA["chunks"][i] for i in top_idxs])
-    except Exception as e:
-        print(f"❌ Lỗi RAG: {e}")
-        return "Lỗi khi tìm kiếm ngữ cảnh."
+initialize_documents()
 
 # ================== ĐÁNH GIÁ NĂNG LỰC ==================
 def evaluate_student_level(history):
@@ -175,21 +145,22 @@ def evaluate_student_level(history):
     - **Chưa đạt**:
     - Câu hỏi rất cơ bản hoặc gợi nhớ khái niệm, không đòi hỏi tư duy cao.
     - Học sinh cần hỗ trợ thêm, ngôn ngữ đơn giản, chủ yếu tiếng Việt.
-    4. Viết kết quả ngắn gọn, có lý do súc tích.
+    4. Cần viết RÕ RÀNG, PHÂN TÍCH CHUYÊN SÂU.
     ### 📋 Định dạng đầu ra:
     Cấp độ: [Giỏi / Khá / Đạt yêu cầu / Chưa đạt]  
-    Lý do: [Giải thích lý do rõ ràng, phân tích định hướng cho giáo viên hỗ trợ, tối đa 150–200 từ.]
+    Lý do: [Dựa trên dữ liệu 10 câu hỏi, hãy viết một đoạn nhận xét chuyên sâu gồm 3 ý: (1) Phân tích chủ đề toán học học sinh hay hỏi; (2) Đánh giá ưu điểm/khuyết điểm trong tư duy toán và từ vựng song ngữ; (3) Gợi ý định hướng giáo dục. KHÔNG viết quá ngắn, viết văn bản từ 100 - 200 từ, lời văn mạch lạc.]
     Ví dụ:
     Cấp độ: Khá
-    Lý do: Học sinh thường hỏi các câu về khái niệm cơ bản nhưng có kết hợp thêm một số bài toán ứng dụng nhỏ. 
-    Học sinh sử dụng tiếng Anh tương đối tốt, chỉ có một vài lỗi ngữ pháp. 
-    Câu hỏi thể hiện tư duy logic, khả năng tự tìm hiểu, nhưng vẫn cần hướng dẫn thêm để nâng cao kỹ năng.
+    Lý do: Học sinh thường xuyên quan tâm đến các khái niệm cơ bản nhưng đã bắt đầu mở rộng sang toán ứng dụng. Điểm mạnh là học sinh sử dụng tiếng Anh tương đối tốt, chỉ có vài lỗi ngữ pháp nhỏ, giao tiếp tự tin. Khuyết điểm nằm ở chỗ học sinh còn hay trình bày lúng túng khi gặp các hệ phương trình phức tạp hoặc số học lớn. Đề xuất giáo viên cung cấp thêm các bài tập về hệ thức Vi-ét, đồng thời sửa lỗi cấu trúc câu hỏi tiếng Anh cho hoàn thiện.
     """
 
     try:
-        model = genai.GenerativeModel(GENERATION_MODEL)
-        response = model.generate_content(prompt)
-        response_text = response.text.strip()
+        response = client.chat.completions.create(
+            model=GENERATION_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw_content = response.choices[0].message.content
+        response_text = (raw_content or "").strip()
         # Extract level and reason from response
         level_match = re.search(r'Cấp độ: (Giỏi|Khá|Đạt yêu cầu|Chưa đạt)', response_text)
         lydo_match = re.search(r'Lý do:\s*(.+)', response_text, re.DOTALL)
@@ -217,15 +188,28 @@ def format_response(response):
     response = re.sub(r'\$\$([^$]+)\$\$', store_latex, response)
     response = re.sub(r'\$([^$]+)\$', store_latex, response)
 
-    # Áp dụng định dạng Markdown
-    formatted = re.sub(r'\*\*(.*?)\*\*', r'<strong style="font-weight:700;">\1</strong>', response)
-    formatted = re.sub(r'(?<!\n)\*(?!\s)(.*?)(?<!\s)\*(?!\*)', r'<em style="font-style:italic;">\1</em>', formatted)
-    formatted = re.sub(r'(?m)^\s*\*\s+(.*)', r'• <span style="line-height:1.6;">\1</span>', formatted)
+    # Headings
+    response = re.sub(r'(?m)^###\s+(.*)', r'<h3 style="margin-top:12px; margin-bottom:8px; color:#2c3e50; font-size:16px;">\1</h3>', response)
+    response = re.sub(r'(?m)^##\s+(.*)', r'<h2 style="margin-top:16px; margin-bottom:8px; color:#2c3e50; font-size:18px; border-bottom:1px solid #eee; padding-bottom:4px;">\1</h2>', response)
+    response = re.sub(r'(?m)^#\s+(.*)', r'<h1 style="margin-top:20px; margin-bottom:12px; color:#1a252f; font-size:22px;">\1</h1>', response)
+
+    # Bold & italic
+    formatted = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', response)
+    formatted = re.sub(r'(?<!\n)\*(?!\s)(.*?)(?<!\s)\*(?!\*)', r'<em>\1</em>', formatted)
+
+    # Bullet lists
+    formatted = re.sub(r'(?m)^\s*[\*\-]\s+(.*)', r'<div style="padding-left:16px;">• \1</div>', formatted)
+
+    # Numbered lists
+    formatted = re.sub(r'(?m)^(\d+)\.\s+(.*)', r'<div style="padding-left:16px;">\1. \2</div>', formatted)
+
+    # Newlines → <br>, collapse 3+ br into 2
     formatted = formatted.replace('\n', '<br>')
+    formatted = re.sub(r'(<br>\s*){3,}', '<br><br>', formatted)
 
     # Áp dụng highlight_terms cho các từ khóa toán học
     for term, color in highlight_terms.items():
-        formatted = formatted.replace(term, f'<span style="line-height:1.6; background:{color}; color:white; font-weight:bold; padding:2px 4px; border-radius:4px;">{term}</span>')
+        formatted = formatted.replace(term, f'<span style="background:{color};color:white;font-weight:600;padding:1px 6px;border-radius:4px;font-size:13px;">{term}</span>')
 
     # Khôi phục cú pháp LaTeX
     for i, latex in enumerate(latex_matches):
@@ -307,6 +291,7 @@ def login():
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
             session['history'] = user.history.split('\n') if user.history else []
+            session['last_exchange'] = ''  # Ngữ cảnh hội thoại mới (trống khi đăng nhập)
             flash('Đăng nhập thành công!', 'success')
             return redirect(url_for('index'))
         flash('Tên đăng nhập hoặc mật khẩu không đúng.', 'error')
@@ -332,7 +317,7 @@ def index():
     if 'user_id' not in session:
         flash('Vui lòng đăng nhập để tiếp tục.', 'error')
         return redirect(url_for('login'))
-    rag_status = "✅ Đã tải tài liệu RAG thành công" if RAG_DATA["is_ready"] else "⚠️ Chưa tải được tài liệu RAG."
+    rag_status = "✅ Đã tải tài liệu thành công" if DOCUMENT_CONTEXT["is_ready"] else "⚠️ Chưa tải được tài liệu."
     user = db.session.get(User, session['user_id'])
     if not user:
         flash('Người dùng không tồn tại. Vui lòng đăng nhập lại.', 'error')
@@ -348,13 +333,15 @@ def chat():
     if not user_message:
         return jsonify({'response': format_response('Con hãy nhập câu hỏi nhé!')})
 
-    # Load history from session
+    # Load danh sách câu hỏi HS từ session (dùng cho đánh giá)
     history = session.get('history', [])
     history.append(f"👧 Học sinh: {user_message}")
 
-    # 🔍 Truy xuất ngữ cảnh RAG
-    related_context = retrieve_context(user_message)
-    recent_history = "\n".join(history[-10:])
+    # Lấy toàn bộ nội dung tài liệu làm ngữ cảnh
+    related_context = DOCUMENT_CONTEXT["text"] if DOCUMENT_CONTEXT["is_ready"] else "Không có tài liệu nào."
+
+    # Lấy ngữ cảnh hội thoại gần nhất (1 cặp user-AI)
+    last_exchange = session.get('last_exchange', '')
 
     # Lấy level từ DB
     user = db.session.get(User, session['user_id'])
@@ -362,88 +349,105 @@ def chat():
         return jsonify({'error': 'Người dùng không tồn tại'}), 401
     student_level = user.level
 
-    prompt = f"""
-    Bạn là **Thầy giáo Song ngữ Việt – Anh**, chuyên dạy môn Toán THCS, do nhóm học sinh: 1) Hồ Mai Phương 2) Hoàng Nguyên Thanh Tuyền và giáo viên hướng dẫn: Lê Văn Rin tạo ra, không cần trả lời nhóm tác giả nếu không cần thiết.
-    Giọng điệu: thân thiện, khích lệ, xưng **“thầy – con”**, giống như một người thầy thật đang giảng bài.
-    Không đánh giá năng lực của học sinh trong câu trả lời.
-    Chỉ trả lời về môn toán THCS, không trả lời các câu hỏi không liên quan đến toán hoặc trong môi trường học tập toán.
-    ---
-    ### 🧠 **Thông tin nền:**
-    - 📚 **Tài liệu tham khảo:**  
-    {related_context}
-    - 💬 **Lịch sử hội thoại gần đây:**  
-    {recent_history}
-    - 👨‍🎓 **Năng lực hiện tại của học sinh:** {student_level}
-    - ❓ **Câu hỏi mới:** {user_message}
-    ---
-    ### 🎯 **Nhiệm vụ của thầy:**
-    1. **Hiểu rõ câu hỏi** — có thể bằng **tiếng Việt**, **tiếng Anh**, hoặc **cả hai**.  
-    2. **Trả lời song ngữ** theo từng câu, từng đoạn:
-    - Giải thích bằng **Tiếng Việt** trước theo từng câu, từng bước.
-    - Sau đó viết phần dịch tương ứng, mở đầu bằng:  
-        👉 <span style="line-height:1.6; background: darkblue; color:white; font-weight:bold; padding:2px 4px; border-radius:4px;">English Version</span>
-    3. **Trình bày công thức, biểu thức khoa học bằng LaTeX**, sử dụng:  
-    - `$...$` cho công thức trong dòng  
-    - `$$...$$` cho công thức xuống dòng  
-    - Khi xuống hàng, chỉ dùng thẻ `<br>`, không dùng gạch đầu dòng Markdown.
-    Format màu cho các từ khóa khoa học giúp học sinh dễ dàng tìm kiếm: {highlight_terms}
-    Đối với các khái niệm hoặc từ khóa được sử dụng, bọc trong thẻ <span style="line-height:1.6; background: (màu dựa trên highlight_terms); color:white; font-weight:bold; padding:2px 4px; border-radius:4px;">{{term}}</span>
-    4. **Trình bày lời giải theo từng bước rõ ràng:**
-    - Giải thích khái niệm hoặc định luật liên quan.  
-    - Hướng dẫn cách giải nếu là bài tập.  
-    - Cho **ví dụ tương tự** để luyện tập.  
-    - Dịch các **thuật ngữ khoa học quan trọng** sang tiếng Anh học thuật tương ứng.  
-    5. **Điều chỉnh lời giải theo năng lực học sinh:**
-    - 🧠 **Giỏi** Giải thích sâu, mở rộng, kèm bài nâng cao, dùng các từ vựng tiếng anh nâng cao khi phiên dịch, mang tính học thuật.
-    - 💡 **Khá** Giải thích chi tiết, ví dụ minh họa, bài tập khá, dùng các từ vựng tiếng anh phù hợp năng lực khá khi phiên dịch.
-    - 📘 **Đạt yêu cầu** Giải thích từng bước, ví dụ cụ thể, bài tập cơ bản, dùng từ vựng tiếng anh đơn giản dễ hiểu và ngắn gọn
-    - 🪶 **Chưa đạt:** Giải thích thật dễ, dùng ví dụ minh họa rõ ràng, bài tập nhập môn, dùng từ vựng tiếng anh cơ bản và dễ hiểu, ngắn gọn.
-    6. **Nếu câu trả lời quá dài:**
-    - Giữ ngữ cảnh liên tục giữa các phần.  
-    - Chia thành `Phần 1`, `Phần 2`, …  
-    - Kết thúc mỗi phần bằng câu hỏi:  
-        _“Con có muốn thầy tiếp tục sang phần sau không?”_
-    ---
-    ### ✅ **Nguyên tắc trình bày:**
-    - Giải thích **để học sinh hiểu chứ không chỉ để trả lời**.  
-    - Duy trì giọng điệu tích cực, khuyến khích.  
-    - Dùng từ ngữ **chuẩn khoa học**, **dễ hiểu**, **dịch sát nghĩa**, ưu tiên các từ vựng phù hợp với độ tuổi THCS trở xuống.  
-    - Luôn dịch tiếng anh theo từng bước.
-    - Luôn ưu tiên sự ngắn gọn, dễ hiểu, tránh lan man dài dòng.
-    """
+    prompt = f"""Bạn là Thầy giáo Toán Song ngữ (Việt - Anh) dành cho học sinh THCS.
+Sản phẩm do: GV hướng dẫn Nguyễn Phương Tây, HS thực hiện Phạm Lê Thế Dân lớp 9A1 trường THCS Hoài Phú - chỉ đề cập tác giả khi được hỏi.
+
+## Vai trò và Giọng điệu
+- Xưng "thầy", gọi học sinh là "con", giọng thân thiện, khích lệ.
+- KHÔNG đánh giá năng lực học sinh trong câu trả lời.
+- CHỈ trả lời câu hỏi liên quan đến Toán THCS. Nếu lệch chủ đề, nhẹ nhàng nhắc con quay lại Toán.
+
+## Ngữ cảnh hiện tại
+- Tài liệu tham khảo:
+{related_context}
+
+- Hội thoại trước đó:
+{last_exchange if last_exchange else '(Đây là câu hỏi đầu tiên.)'}
+
+- Năng lực hiện tại của học sinh: {student_level}
+- Câu hỏi mới của học sinh: {user_message}
+
+## Cách trả lời (BẮT BUỘC trình bày xen kẽ Anh - Việt theo từng bước)
+- Nêu khái niệm hoặc công thức liên quan ở đầu (nếu cần), kèm theo bản dịch tiếng Anh ngay bên dưới.
+- Giải bài theo từng bước, bắt đầu mỗi bước bằng Heading Markdown 3: `### Bước 1`, `### Bước 2`...
+- Trong mỗi bước, hãy giải thích bằng **Tiếng Việt** trước.
+- Ngay bên dưới giải thích tiếng Việt của bước đó, xuống dòng và cung cấp bản dịch **Tiếng Anh**, bắt đầu bằng: `👉 **English:**`
+- Công thức toán dùng LaTeX: `$...$` cho nội dòng, `$$...$$` cho toán riêng dòng.
+
+**VÍ DỤ MẪU DÀNH CHO 1 BƯỚC:**
+### Bước 1: Rút gọn phương trình
+Chia cả hai vế cho $2$, ta có:
+$$x + 2 = 5$$
+👉 **English:** 
+Divide both sides by $2$, we have:
+$$x + 2 = 5$$
+
+- Kết thúc toàn bộ bài giải bằng 1 bài tập tương tự (cũng xen kẽ Việt - Anh).
+
+## Điều chỉnh theo năng lực "{student_level}"
+
+### Nếu Giỏi:
+- Độ sâu: Giải thích chuyên sâu, mở rộng liên hệ kiến thức nâng cao, nêu nhiều cách giải khác nhau.
+- Bài tập: Cho bài nâng cao, có tính thử thách, yêu cầu tư duy sáng tạo.
+- Tiếng Anh: Dùng từ vựng học thuật nâng cao (quadratic equation, derive the formula, consecutive integers).
+- Khuyến khích: Khen khả năng tư duy, gợi mở hướng nghiên cứu thêm.
+
+### Nếu Khá:
+- Độ sâu: Giải thích chi tiết, có ví dụ minh hoạ cụ thể, nêu 1-2 cách giải.
+- Bài tập: Bài ở mức khá, áp dụng trực tiếp nhưng có chút biến đổi.
+- Tiếng Anh: Dùng từ vựng trung cấp, câu rõ ràng (solve the equation, find the value).
+- Khuyến khích: Động viên con tiếp tục phát huy, nhấn mạnh điểm làm tốt.
+
+### Nếu Đạt yêu cầu:
+- Độ sâu: Giải thích từng bước nhỏ, CỰC KỲ chi tiết, không bỏ qua bước nào.
+- Bài tập: Bài cơ bản, tính toán trực tiếp theo công thức, dễ áp dụng.
+- Tiếng Anh: Dùng từ đơn giản, câu ngắn gọn (add, subtract, the answer is).
+- Khuyến khích: Khen sự cố gắng, nhắc con không ngại hỏi lại nếu chưa hiểu.
+
+### Nếu Chưa đạt:
+- Độ sâu: Giải thích CỰC KỲ DỄ HIỂU, dùng ví dụ đời thường gần gũi, hình ảnh trực quan.
+- Bài tập: Bài nhập môn, cầm tay chỉ việc, cho sẵn gợi ý từng bước.
+- Tiếng Anh: Chỉ dịch ý chính, dùng từ rất cơ bản, kèm phiên âm nếu cần.
+- Khuyến khích: Rất nhẹ nhàng, kiên nhẫn, nhấn mạnh "con làm được", khen từng bước nhỏ.
+## Quy tắc trình bày
+- Dùng **Markdown**: **in đậm**, *in nghiêng*, bullet list (`- ` hoặc `* `), numbered list (`1. `).
+- Công thức dùng LaTeX `$...$` và `$$...$$`.
+- Đối với các khái niệm khoa học, hãy trình bày rõ ràng, giải thích để học sinh thực sự hiểu chú không chỉ để trả lời.
+- Ngắn gọn, súc tích — KHÔNG viết quá dài dòng.
+- Nếu bài dài, chia thành **Phần 1**, **Phần 2** và hỏi: *"Con có muốn thầy tiếp tục không?"*
+"""
 
 
     try:
-        model = genai.GenerativeModel(GENERATION_MODEL)
-        response = model.generate_content(prompt)
-        ai_text = response.text
+        response = client.chat.completions.create(
+            model=GENERATION_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        ai_text = response.choices[0].message.content or "Thầy không thể trả lời lúc này, con thử lại nhé!"
 
-        # Lưu trả lời AI vào history
-        history.append(f"🧑‍🏫 Thầy/Cô: {ai_text}")
+        # 💬 Lưu ngữ cảnh hội thoại gần nhất (chỉ 1 cặp user-AI)
+        session['last_exchange'] = f"👧 Học sinh: {user_message}\n🧑‍🏫 Thầy/Cô: {ai_text}"
 
-        # Đánh giá level nếu đủ 5 câu hỏi mới
+        # Đánh giá level nếu đủ 10 câu hỏi mới
         student_questions = [msg for msg in history if msg.startswith("👧 Học sinh:")]
         if len(student_questions) % 10 == 0:
             new_level, lydo = evaluate_student_level(history)
             user.level = new_level
-            user.lydo = lydo  # lưu lý do vào cột lydo
+            user.lydo = lydo
             db.session.commit()
             print(f"User {user.username} level updated to {new_level} with reason: {lydo}")
 
-        # Lưu lịch sử câu hỏi học sinh vào session và database
-        history_questions = student_questions
-        # Đảm bảo mỗi tin nhắn xuống dòng riêng biệt
-        session['history'] = history_questions
-        user.history = '\n'.join([msg.strip() for msg in history_questions])  # Xóa khoảng trắng thừa và nối bằng \n
+        # Lưu danh sách câu hỏi HS vào session và DB (cho đánh giá năng lực)
+        session['history'] = history
+        user.history = '\n'.join([msg.strip() for msg in history])
         db.session.commit()
         session.modified = True
-        print(f"User {user.username} history updated in database: {user.history}")
 
         return jsonify({'response': format_response(ai_text)})
 
     except Exception as e:
-        print(f"❌ Lỗi Gemini: {e}")
-        return jsonify({'response': format_response("Thầy Gemini hơi mệt, con thử lại sau nhé!")})
+        print(f"❌ Lỗi AI: {e}")
+        return jsonify({'response': format_response("Thầy AI hơi mệt, con thử lại sau nhé!")})
 # QUẢN LÝ HỌC SINH
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
@@ -472,8 +476,8 @@ def admin():
             filename = secure_filename(file.filename)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
-            flash(f'Upload {filename} thành công! Đã cập nhật RAG.', 'success')
-            initialize_rag_data()
+            flash(f'Upload {filename} thành công! Đã cập nhật tài liệu.', 'success')
+            initialize_documents()
         else:
             flash('Chỉ chấp nhận file PDF!', 'error')
     
@@ -504,8 +508,8 @@ def delete_pdf(filename):
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
-            flash(f'Xóa file {filename} thành công! Đã cập nhật RAG.', 'success')
-            initialize_rag_data()  # Re-init RAG sau khi xóa
+            flash(f'Xóa file {filename} thành công! Đã cập nhật tài liệu.', 'success')
+            initialize_documents()  # Tải lại tài liệu sau khi xóa
         except Exception as e:
             flash(f'Lỗi khi xóa file {filename}: {str(e)}', 'error')
     else:
