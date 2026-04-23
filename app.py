@@ -30,12 +30,17 @@ app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
 if not app.secret_key:
     raise ValueError("❌ Không tìm thấy FLASK_SECRET_KEY trong biến môi trường!")
-app.config["SESSION_TYPE"] = "filesystem"
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 if not app.config['SQLALCHEMY_DATABASE_URI']:
     raise ValueError("❌ Không tìm thấy DATABASE_URL trong biến môi trường!")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+# Cấu hình lưu Session vào Database thay vì FileSystem (khắc phục lỗi Read-only trên Vercel)
+app.config["SESSION_TYPE"] = "sqlalchemy"
+app.config["SESSION_SQLALCHEMY"] = db
+app.config["SESSION_SQLALCHEMY_TABLE"] = "sessions"
+
 migrate = Migrate(app, db)
 Session(app)
 # Cấu hình upload folder cho PDF
