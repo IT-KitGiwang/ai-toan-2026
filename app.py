@@ -1,18 +1,16 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, send_file
-from werkzeug.security import generate_password_hash, check_password_hash
 from openai import OpenAI
 import PyPDF2
 import re
+import json
 from dotenv import load_dotenv
 load_dotenv()
 import os
-from flask_session import Session
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from sqlalchemy.sql import text
 import pandas as pd
 from io import BytesIO
 from werkzeug.utils import secure_filename
+import firebase_admin
+from firebase_admin import auth, credentials, firestore
 # ================== CẤU HÌNH & KHỞI TẠO ==================
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
@@ -30,43 +28,142 @@ app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
 if not app.secret_key:
     raise ValueError("❌ Không tìm thấy FLASK_SECRET_KEY trong biến môi trường!")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-if not app.config['SQLALCHEMY_DATABASE_URI']:
-    raise ValueError("❌ Không tìm thấy DATABASE_URL trong biến môi trường!")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
 
-# Cấu hình lưu Session vào Database thay vì FileSystem (khắc phục lỗi Read-only trên Vercel)
-app.config["SESSION_TYPE"] = "sqlalchemy"
-app.config["SESSION_SQLALCHEMY"] = db
-app.config["SESSION_SQLALCHEMY_TABLE"] = "sessions"
-
-migrate = Migrate(app, db)
-Session(app)
 # Cấu hình upload folder cho PDF
 UPLOAD_FOLDER = './static'
 ALLOWED_EXTENSIONS = {'pdf'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Giới hạn 16MB
 
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "phuongtay89@gmail.com").lower()
+FIREBASE_COLLECTION = os.getenv("FIREBASE_USERS_COLLECTION", "taikhoan_hocsinh")
+
+def initialize_firebase():
+    if firebase_admin._apps:
+        return firestore.client()
+
+    service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+    service_account_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH")
+
+    if service_account_json:
+        cred = credentials.Certificate(json.loads(service_account_json))
+    elif service_account_path:
+        cred = credentials.Certificate(service_account_path)
+    else:
+        raise ValueError("Không tìm thấy FIREBASE_SERVICE_ACCOUNT_JSON hoặc FIREBASE_SERVICE_ACCOUNT_PATH trong biến môi trường!")
+
+    firebase_admin.initialize_app(cred)
+    return firestore.client()
+
+firebase_db = initialize_firebase()
+
+def get_firebase_web_config():
+    return {
+        "apiKey": os.getenv("FIREBASE_API_KEY", ""),
+        "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN", ""),
+        "projectId": os.getenv("FIREBASE_PROJECT_ID", ""),
+        "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET", ""),
+        "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID", ""),
+        "appId": os.getenv("FIREBASE_APP_ID", ""),
+        "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID", ""),
+    }
+
+def get_user_ref(uid):
+    return firebase_db.collection(FIREBASE_COLLECTION).document(uid)
+
+def score_from_level(level):
+    return {
+        "Giỏi": 90,
+        "Khá": 75,
+        "Đạt yêu cầu": 60,
+        "Chưa đạt": 40,
+    }.get(level, 60)
+
+def split_history(history_text):
+    return [line for line in (history_text or "").split("\n") if line.strip()]
+
+def safe_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+def normalize_student(uid, data):
+    data = data or {}
+    level = data.get("level", "Đạt yêu cầu")
+    score = safe_int(data.get("score"), score_from_level(level))
+    return {
+        "id": uid,
+        "uid": uid,
+        "username": data.get("username") or data.get("email") or uid,
+        "email": data.get("email", ""),
+        "name": data.get("name") or data.get("display_name") or "Chưa đặt tên",
+        "level": level,
+        "score": score,
+        "history": data.get("history", ""),
+        "last_exchange": data.get("last_exchange", ""),
+        "lydo": data.get("lydo", ""),
+        "question_count": safe_int(data.get("question_count"), 0),
+    }
+
+def get_student(uid):
+    doc = get_user_ref(uid).get()
+    return normalize_student(uid, doc.to_dict() if doc.exists else {})
+
+def save_student(uid, data):
+    data["updated_at"] = firestore.SERVER_TIMESTAMP
+    get_user_ref(uid).set(data, merge=True)
+
+def list_students():
+    students = []
+    for doc in firebase_db.collection(FIREBASE_COLLECTION).stream():
+        students.append(normalize_student(doc.id, doc.to_dict()))
+    return sorted(students, key=lambda item: item["name"].lower())
+
+def login_with_firebase_token(id_token, submitted_name=""):
+    decoded_token = auth.verify_id_token(id_token)
+    uid = decoded_token["uid"]
+    email = (decoded_token.get("email") or "").lower()
+
+    if email == ADMIN_EMAIL:
+        session["admin_session"] = True
+        session["admin_email"] = email
+        return "admin"
+
+    user_ref = get_user_ref(uid)
+    user_doc = user_ref.get()
+    current = normalize_student(uid, user_doc.to_dict() if user_doc.exists else {})
+    stored_name = current["name"]
+    display_name = (
+        submitted_name
+        or (stored_name if stored_name != "Chưa đặt tên" else "")
+        or decoded_token.get("name")
+        or email
+        or uid
+    ).strip()
+    save_student(uid, {
+        "uid": uid,
+        "email": email,
+        "username": email or uid,
+        "name": display_name or current["name"],
+        "display_name": decoded_token.get("name", ""),
+        "photo_url": decoded_token.get("picture", ""),
+        "level": current["level"],
+        "score": current["score"],
+        "history": current["history"],
+        "last_exchange": current["last_exchange"],
+        "lydo": current["lydo"],
+        "question_count": current["question_count"],
+        "auth_provider": "google",
+        **({ "created_at": firestore.SERVER_TIMESTAMP } if not user_doc.exists else {}),
+    })
+
+    session["user_id"] = uid
+    session["user_email"] = email
+    return "student"
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-class User(db.Model):
-    __tablename__ = 'taikhoan_hocsinh'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    name = db.Column(db.Text, default='')
-    level = db.Column(db.String(20), default='Đạt yêu cầu')
-    history = db.Column(db.Text, default='')
-    lydo = db.Column(db.Text, default='')
-
-with app.app_context():
-    # Đảm bảo schema public tồn tại
-    db.session.execute(text('CREATE SCHEMA IF NOT EXISTS public;'))
-    db.create_all()
-    print("✅ Đã kiểm tra/tạo bảng taikhoan_hocsinh trong schema public")
 
 # Biến toàn cục lưu nội dung tài liệu PDF
 DOCUMENT_CONTEXT = {
@@ -256,63 +353,36 @@ highlight_terms = {
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        name = request.form.get('name', '').strip()  # LẤY TÊN HỌC SINH
-        if not username or not password:
-            flash('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.', 'error')
-            return redirect(url_for('register'))
-        if not name:
-            flash('Vui lòng nhập tên học sinh.', 'error')
-            return redirect(url_for('register'))
-
-        if User.query.filter_by(username=username).first():
-            flash('Tên đăng nhập đã tồn tại.', 'error')
-            return redirect(url_for('register'))
-
-        try:
-            hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-            user = User(username=username, password=hashed_password, name=name)
-            db.session.add(user)
-            db.session.commit()
-            flash('Đăng ký thành công! Vui lòng đăng nhập.', 'success')
-            return redirect(url_for('login'))
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error during registration: {str(e)}")
-            flash(f'Lỗi khi đăng ký: {str(e)}', 'error')
-            return redirect(url_for('register'))
-    return render_template('register.html')
+        flash('Vui lòng đăng ký bằng Google để dữ liệu được lưu trên Firebase.', 'error')
+        return redirect(url_for('register'))
+    return render_template('register.html', firebase_config=get_firebase_web_config())
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        if not username or not password:
-            flash('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.', 'error')
-            return redirect(url_for('login'))
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id
-            session['history'] = user.history.split('\n') if user.history else []
-            session['last_exchange'] = ''  # Ngữ cảnh hội thoại mới (trống khi đăng nhập)
-            flash('Đăng nhập thành công!', 'success')
-            return redirect(url_for('index'))
-        flash('Tên đăng nhập hoặc mật khẩu không đúng.', 'error')
+        flash('Vui lòng đăng nhập bằng Google.', 'error')
         return redirect(url_for('login'))
-    return render_template('login.html')
+    return render_template('login.html', firebase_config=get_firebase_web_config())
+
+@app.route('/firebase-login', methods=['POST'])
+def firebase_login():
+    data = request.get_json(silent=True) or {}
+    id_token = data.get('idToken')
+    name = data.get('name', '').strip()
+    if not id_token:
+        return jsonify({'error': 'Thiếu Firebase ID token'}), 400
+
+    try:
+        role = login_with_firebase_token(id_token, name)
+        if role == "admin":
+            return jsonify({'redirect': url_for('admin')})
+        return jsonify({'redirect': url_for('index')})
+    except Exception as e:
+        print(f"Firebase login error: {e}")
+        return jsonify({'error': 'Không thể xác thực Google. Vui lòng thử lại.'}), 401
 
 @app.route('/logout')
 def logout():
-    if 'user_id' in session:
-        user = db.session.get(User, session['user_id'])
-        if user:
-            user.history = '\n'.join(session.get('history', []))
-            db.session.commit()
-            print(f"User {user.username} history updated")
-        else:
-            print(f"User with ID {session['user_id']} not found")
     session.clear()
     flash('Đã đăng xuất thành công.', 'success')
     return redirect(url_for('login'))
@@ -323,11 +393,8 @@ def index():
         flash('Vui lòng đăng nhập để tiếp tục.', 'error')
         return redirect(url_for('login'))
     rag_status = "✅ Đã tải tài liệu thành công" if DOCUMENT_CONTEXT["is_ready"] else "⚠️ Chưa tải được tài liệu."
-    user = db.session.get(User, session['user_id'])
-    if not user:
-        flash('Người dùng không tồn tại. Vui lòng đăng nhập lại.', 'error')
-        return redirect(url_for('login'))
-    return render_template('index.html', rag_status=rag_status, user_level=user.level)
+    user = get_student(session['user_id'])
+    return render_template('index.html', rag_status=rag_status, user_level=user['level'], user_score=user['score'])
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -338,21 +405,16 @@ def chat():
     if not user_message:
         return jsonify({'response': format_response('Con hãy nhập câu hỏi nhé!')})
 
-    # Load danh sách câu hỏi HS từ session (dùng cho đánh giá)
-    history = session.get('history', [])
+    user = get_student(session['user_id'])
+    history = split_history(user['history'])
     history.append(f"👧 Học sinh: {user_message}")
 
     # Lấy toàn bộ nội dung tài liệu làm ngữ cảnh
     related_context = DOCUMENT_CONTEXT["text"] if DOCUMENT_CONTEXT["is_ready"] else "Không có tài liệu nào."
 
-    # Lấy ngữ cảnh hội thoại gần nhất (1 cặp user-AI)
-    last_exchange = session.get('last_exchange', '')
-
-    # Lấy level từ DB
-    user = db.session.get(User, session['user_id'])
-    if not user:
-        return jsonify({'error': 'Người dùng không tồn tại'}), 401
-    student_level = user.level
+    last_exchange = user['last_exchange']
+    student_level = user['level']
+    student_score = user['score']
 
     prompt = f"""Bạn là Thầy giáo Toán Song ngữ (Việt - Anh) dành cho học sinh THCS.
 Sản phẩm do: GV hướng dẫn Nguyễn Phương Tây, HS thực hiện Phạm Lê Thế Dân lớp 9A1 trường THCS Hoài Phú - chỉ đề cập tác giả khi được hỏi.
@@ -370,6 +432,7 @@ Sản phẩm do: GV hướng dẫn Nguyễn Phương Tây, HS thực hiện Ph�
 {last_exchange if last_exchange else '(Đây là câu hỏi đầu tiên.)'}
 
 - Năng lực hiện tại của học sinh: {student_level}
+- Điểm đánh giá hiện tại: {student_score}/100
 - Câu hỏi mới của học sinh: {user_message}
 
 ## Cách trả lời (BẮT BUỘC trình bày xen kẽ Anh - Việt theo từng bước)
@@ -430,25 +493,36 @@ $$x + 2 = 5$$
         )
         ai_text = response.choices[0].message.content or "Thầy không thể trả lời lúc này, con thử lại nhé!"
 
-        # 💬 Lưu ngữ cảnh hội thoại gần nhất (chỉ 1 cặp user-AI)
-        session['last_exchange'] = f"👧 Học sinh: {user_message}\n🧑‍🏫 Thầy/Cô: {ai_text}"
+        last_exchange = f"👧 Học sinh: {user_message}\n🧑‍🏫 Thầy/Cô: {ai_text}"
 
         # Đánh giá level nếu đủ 10 câu hỏi mới
         student_questions = [msg for msg in history if msg.startswith("👧 Học sinh:")]
+        new_level = user['level']
+        new_score = user['score']
+        lydo = user['lydo']
         if len(student_questions) % 10 == 0:
             new_level, lydo = evaluate_student_level(history)
-            user.level = new_level
-            user.lydo = lydo
-            db.session.commit()
-            print(f"User {user.username} level updated to {new_level} with reason: {lydo}")
+            new_score = score_from_level(new_level)
+            user['level'] = new_level
+            user['lydo'] = lydo
+            user['score'] = new_score
+            print(f"User {user['username']} level updated to {new_level}, score {new_score}, reason: {lydo}")
 
-        # Lưu danh sách câu hỏi HS vào session và DB (cho đánh giá năng lực)
-        session['history'] = history
-        user.history = '\n'.join([msg.strip() for msg in history])
-        db.session.commit()
-        session.modified = True
+        # Lưu lịch sử, điểm số và đánh giá vào Firebase.
+        save_student(session['user_id'], {
+            'history': '\n'.join([msg.strip() for msg in history]),
+            'last_exchange': last_exchange,
+            'level': new_level,
+            'score': new_score,
+            'lydo': lydo,
+            'question_count': len(student_questions),
+        })
 
-        return jsonify({'response': format_response(ai_text)})
+        return jsonify({
+            'response': format_response(ai_text),
+            'level': new_level,
+            'score': new_score,
+        })
 
     except Exception as e:
         print(f"❌ Lỗi AI: {e}")
@@ -457,20 +531,8 @@ $$x + 2 = 5$$
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if 'admin_session' not in session:
-        if request.method == 'POST':
-            username = request.form.get('username')
-            password = request.form.get('password')
-            if username == 'thaygiao1234':
-                user = User.query.filter_by(username=username).first()
-                if user and check_password_hash(user.password, password):
-                    session['admin_session'] = True
-                    flash('Đăng nhập admin thành công!', 'success')
-                    return redirect(url_for('admin'))
-                else:
-                    flash('Tên đăng nhập hoặc mật khẩu không đúng.', 'error')
-            else:
-                flash('Tên đăng nhập admin không đúng.', 'error')
-        return render_template('admin_login.html')
+        flash(f'Vui lòng đăng nhập Google bằng email admin: {ADMIN_EMAIL}', 'error')
+        return redirect(url_for('login'))
     
     # Xử lý upload file PDF
     if request.method == 'POST' and 'file' in request.files:
@@ -488,17 +550,19 @@ def admin():
     
     pdf_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.endswith('.pdf')] if os.path.exists(app.config['UPLOAD_FOLDER']) else []
     
-    # Lấy dữ liệu taikhoan_hocsinh + tên học sinh
-    taikhoan_hocsinh = User.query.all()
+    # Lấy dữ liệu taikhoan_hocsinh + tên học sinh từ Firebase
+    taikhoan_hocsinh = list_students()
     user_data = []
     for user in taikhoan_hocsinh:
         user_data.append({
-            'id': user.id,
-            'username': user.username,
-            'name': user.name or "Chưa đặt tên",  # HIỂN THỊ TÊN
-            'level': user.level,
-            'lydo': user.lydo,
-            'history': user.history if user.history else 'Chưa có lịch sử'
+            'id': user['id'],
+            'username': user['username'],
+            'name': user['name'] or "Chưa đặt tên",  # HIỂN THỊ TÊN
+            'level': user['level'],
+            'score': user['score'],
+            'lydo': user['lydo'],
+            'question_count': user['question_count'],
+            'history': user['history'] if user['history'] else 'Chưa có lịch sử'
         })
     
     return render_template('admin.html', pdf_files=pdf_files, user_data=user_data)
@@ -528,16 +592,18 @@ def export_csv():
         flash('Bạn không có quyền truy cập.', 'error')
         return redirect(url_for('admin'))
     
-    taikhoan_hocsinh = User.query.all()
+    taikhoan_hocsinh = list_students()
     user_data = []
     for user in taikhoan_hocsinh:
         user_data.append({
-            'ID': user.id,
-            'Tên đăng nhập': user.username,
-            'Tên học sinh': user.name or "Chưa đặt tên",  # THÊM CỘT TÊN
-            'Năng lực': user.level,
-            'Lý do': user.lydo,
-            'Lịch sử': user.history if user.history else 'Chưa có lịch sử'
+            'ID': user['id'],
+            'Tên đăng nhập': user['username'],
+            'Tên học sinh': user['name'] or "Chưa đặt tên",  # THÊM CỘT TÊN
+            'Năng lực': user['level'],
+            'Điểm số': user['score'],
+            'Số câu hỏi': user['question_count'],
+            'Lý do': user['lydo'],
+            'Lịch sử': user['history'] if user['history'] else 'Chưa có lịch sử'
         })
     
     df = pd.DataFrame(user_data)

@@ -2,622 +2,267 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Đăng ký - Trợ lý AI Học Toán</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    :root {
-      --primary: #4a6bff;
-      --primary-light: #6c8eff;
-      --primary-dark: #3a5bff;
-      --secondary: #ff6b8b;
-      --secondary-light: #ff9a9e;
-      --accent: #facc15;
-      --accent-hover: #eab308;
-      --success: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --light: #f9fafb;
-      --dark: #1f2937;
-      --gray: #6b7280;
-      --border: #e5e7eb;
-      --card-bg: #ffffff;
-      --shadow: rgba(0, 0, 0, 0.08);
-    }
-
-       body {
-      background: linear-gradient( 
-        rgba(252, 88, 88, 0.92) 14%, 
-        rgba(77, 104, 253, 0.92) 30%),
-        url('https://image.slidesdocs.com/responsive-images/background/education-cute-mathematics-notebook-ruler-pink-powerpoint-background_829deb8b68__783_440.jpg');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      min-height: 100vh;
-      font-family: 'Segoe UI', 'Inter', sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .register-container {
-      width: 100%;
-      max-width: 500px;
-      animation: fadeIn 0.8s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .register-card {
-      background: var(--card-bg);
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 
-        0 20px 60px rgba(74, 107, 255, 0.15),
-        0 5px 20px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
-      border: none;
-      transition: transform 0.3s ease;
-    }
-
-    .register-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .card-header {
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      padding: 40px 30px 30px;
-      text-align: center;
-      border-bottom: none;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card-header::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 8px;
-      background: linear-gradient(90deg, 
-        var(--accent) 0%, 
-        #ff9a9e 25%, 
-        #fad0c4 50%, 
-        #ffd1ff 75%, 
-        var(--accent) 100%);
-    }
-
-    .logo-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .logo-icon {
-      width: 80px;
-      height: 80px;
-      background: white;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .logo-icon::before {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
-      animation: shine 3s infinite;
-    }
-
-    @keyframes shine {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-
-    .logo-icon i {
-      font-size: 36px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      z-index: 1;
-    }
-
-    .app-title {
-      font-size: 28px;
-      font-weight: 800;
-      color: white;
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-    }
-
-    .app-subtitle {
-      font-size: 16px;
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 400;
-    }
-
-    .card-body {
-      padding: 40px 35px 35px;
-    }
-
-    .register-title {
-      text-align: center;
-      color: var(--dark);
-      font-weight: 700;
-      margin-bottom: 30px;
-      font-size: 22px;
-      position: relative;
-      padding-bottom: 15px;
-    }
-
-    .register-title::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 4px;
-      background: linear-gradient(90deg, var(--accent), #ff9a9e);
-      border-radius: 2px;
-    }
-
-    .form-group {
-      margin-bottom: 25px;
-    }
-
-    .form-label {
-      display: flex;
-      align-items: center;
-      font-weight: 600;
-      color: var(--dark);
-      margin-bottom: 10px;
-      font-size: 15px;
-    }
-
-    .form-label i {
-      margin-right: 10px;
-      color: var(--primary);
-      font-size: 18px;
-      width: 24px;
-      text-align: center;
-    }
-
-    .input-with-icon {
-      position: relative;
-    }
-
-    .input-with-icon i {
-      position: absolute;
-      left: 18px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--primary);
-      font-size: 18px;
-      z-index: 2;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 16px 20px 16px 55px;
-      border: 2px solid #e2e8f0;
-      border-radius: 14px;
-      font-size: 16px;
-      transition: all 0.3s;
-      background-color: #f8f9ff;
-      color: var(--dark);
-    }
-
-    .form-control:focus {
-      border-color: var(--primary);
-      background-color: white;
-      box-shadow: 0 0 0 4px rgba(74, 107, 255, 0.15);
-      outline: none;
-    }
-
-    .form-control::placeholder {
-      color: #a0aec0;
-    }
-
-    .btn-register {
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      border: none;
-      color: white;
-      padding: 17px;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      transition: all 0.3s;
-      margin-top: 10px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      box-shadow: 0 8px 20px rgba(74, 107, 255, 0.3);
-    }
-
-    .btn-register:hover {
-      background: linear-gradient(135deg, #3a5bff, #5b7eff);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 25px rgba(74, 107, 255, 0.4);
-      color: white;
-    }
-
-    .btn-register:active {
-      transform: translateY(0);
-    }
-
-    .login-link {
-      text-align: center;
-      margin-top: 25px;
-      padding-top: 25px;
-      border-top: 1px solid #edf2f7;
-    }
-
-    .login-link a {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 15px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.3s;
-    }
-
-    .login-link a:hover {
-      color: var(--primary-light);
-      text-decoration: underline;
-    }
-
-    .alert {
-      border-radius: 14px;
-      border: none;
-      padding: 16px 20px;
-      margin-bottom: 25px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      animation: slideIn 0.5s ease-out;
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    .alert-danger {
-      background-color: #fff5f5;
-      color: #e53e3e;
-      border-left: 4px solid #e53e3e;
-    }
-
-    .alert-success {
-      background-color: #f0fff4;
-      color: #38a169;
-      border-left: 4px solid #38a169;
-    }
-
-    .footer-note {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 13px;
-      color: #718096;
-      line-height: 1.5;
-    }
-
-    .math-decorations {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    .math-symbol {
-      position: absolute;
-      font-size: 28px;
-      font-weight: bold;
-      opacity: 0.08;
-      color: var(--primary);
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-15px) rotate(5deg); }
-    }
-
-    .floating {
-      animation: float 8s ease-in-out infinite;
-    }
-
-    /* Responsive */
-    @media (max-width: 576px) {
-      .card-body {
-        padding: 30px 25px;
-      }
-      
-      .card-header {
-        padding: 30px 20px 25px;
-      }
-      
-      .app-title {
-        font-size: 24px;
-      }
-      
-      .logo-icon {
-        width: 70px;
-        height: 70px;
-      }
-      
-      .logo-icon i {
-        font-size: 32px;
-      }
-      
-      .register-title {
-        font-size: 20px;
-      }
-    }
-
-    .password-strength {
-      margin-top: 8px;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .strength-bar {
-      height: 4px;
-      border-radius: 2px;
-      background: #e2e8f0;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .strength-fill {
-      height: 100%;
-      width: 0%;
-      transition: width 0.3s, background-color 0.3s;
-      border-radius: 2px;
-    }
-  </style>
-</head>
-<body>
-  <!-- Background decorations -->
-  <div class="math-decorations">
-    <div class="math-symbol floating" style="top: 15%; left: 8%;">∫</div>
-    <div class="math-symbol floating" style="top: 20%; right: 8%; animation-delay: 1s;">∑</div>
-    <div class="math-symbol floating" style="bottom: 25%; left: 10%; animation-delay: 2s;">π</div>
-    <div class="math-symbol floating" style="bottom: 15%; right: 5%; animation-delay: 3s;">∞</div>
-    <div class="math-symbol floating" style="top: 45%; left: 5%; animation-delay: 4s;">√</div>
-    <div class="math-symbol floating" style="top: 55%; right: 5%; animation-delay: 5s;">θ</div>
-  </div>
-  
-  <div class="register-container">
-    <div class="card register-card">
-      <div class="card-header">
-        <div class="logo-container">
-          <div class="logo-icon">
-            <i class="fas fa-robot"></i>
-          </div>
-          <h1 class="app-title">Trợ lý AI Học Toán</h1>
-          <p class="app-subtitle">Toán Anh - Việt tích hợp đánh giá năng lực</p>
-        </div>
-      </div>
-      
-      <div class="card-body">
-        <h3 class="register-title">Tạo tài khoản mới</h3>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
-                <i class="fas fa-{{ 'exclamation-circle' if category == 'error' else 'check-circle' }} fa-lg"></i>
-                <div class="flex-grow-1">{{ message }}</div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-
-        <form method="POST" action="{{ url_for('register') }}" id="registerForm">
-          <div class="form-group">
-            <label class="form-label">
-              <i class="fas fa-user-graduate"></i> Họ và tên học sinh
-            </label>
-            <div class="input-with-icon">
-              <i class="fas fa-user"></i>
-              <input type="text" name="name" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" required />
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label">
-              <i class="fas fa-user-circle"></i> Tên đăng nhập
-            </label>
-            <div class="input-with-icon">
-              <i class="fas fa-at"></i>
-              <input type="text" name="username" class="form-control" placeholder="Chọn tên đăng nhập của bạn" required />
-            </div>
-            <small class="text-muted">Tên đăng nhập phải có ít nhất 3 ký tự</small>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label">
-              <i class="fas fa-key"></i> Mật khẩu
-            </label>
-            <div class="input-with-icon">
-              <i class="fas fa-lock"></i>
-              <input type="password" name="password" id="password" class="form-control" placeholder="Tạo mật khẩu bảo mật" required />
-            </div>
-            <div class="password-strength">
-              <span>Độ mạnh:</span>
-              <div class="strength-bar">
-                <div class="strength-fill" id="strengthFill"></div>
-              </div>
-              <span id="strengthText">Yếu</span>
-            </div>
-            <small class="text-muted">Mật khẩu phải có ít nhất 6 ký tự</small>
-          </div>
-          
-          <button type="submit" class="btn btn-register" id="submitBtn">
-            <i class="fas fa-user-plus"></i> Đăng ký tài khoản
-          </button>
-        </form>
-        
-        <div class="login-link">
-          <a href="{{ url_for('login') }}">
-            <i class="fas fa-sign-in-alt"></i> Đã có tài khoản? Đăng nhập ngay
-          </a>
-        </div>
-        
-        <div class="footer-note">
-          <p>Tạo tài khoản để trải nghiệm hệ thống Trợ lý AI Học Toán<br>
-          <small>Phiên bản 2.0 • © 2023 - Toán Anh-Việt Tích hợp</small></p>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Hiệu ứng tương tác
-    document.addEventListener('DOMContentLoaded', function() {
-      // Hiệu ứng focus cho input
-      const inputs = document.querySelectorAll('.form-control');
-      inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-          this.parentElement.style.transform = 'scale(1.02)';
-        });
-        
-        input.addEventListener('blur', function() {
-          this.parentElement.style.transform = 'scale(1)';
-        });
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui", "Segoe UI", "sans-serif"],
+          },
+          boxShadow: {
+            soft: "0 24px 80px rgba(15, 23, 42, 0.16)",
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-[#f7f8fb] text-slate-900 antialiased">
+  <main class="relative min-h-screen overflow-hidden">
+    <div class="absolute inset-0">
+      <img
+        src="https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1800&q=80"
+        alt=""
+        class="h-full w-full object-cover"
+      />
+      <div class="absolute inset-0 bg-slate-950/25"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(14,165,233,0.24),transparent_34%),radial-gradient(circle_at_84%_12%,rgba(34,197,94,0.20),transparent_30%),radial-gradient(circle_at_68%_88%,rgba(245,158,11,0.18),transparent_32%)]"></div>
+    </div>
+
+    <section class="relative z-10 flex min-h-screen items-center px-4 py-8 sm:px-6 lg:px-8">
+      <div class="mx-auto grid w-full max-w-6xl overflow-hidden rounded-[28px] bg-white shadow-soft ring-1 ring-white/70 lg:grid-cols-[0.96fr_1.04fr]">
+        <div class="flex min-h-[660px] items-center justify-center px-5 py-10 sm:px-10 lg:px-12">
+          <div class="w-full max-w-md">
+            <a href="{{ url_for('login') }}" class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M15 18 9 12l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Quay lại đăng nhập
+            </a>
+
+            <div class="mt-8">
+              <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/25">
+                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2" />
+                  <path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  <path d="M19 8v4M21 10h-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </div>
+              <p class="mt-8 text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">Tạo hồ sơ học sinh</p>
+              <h1 class="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Đăng ký bằng Google</h1>
+              <p class="mt-4 text-base leading-7 text-slate-600">
+                Nhập tên học sinh trước, sau đó chọn tài khoản Google. Hệ thống sẽ tạo hồ sơ học tập trên Firebase.
+              </p>
+            </div>
+
+            <div class="mt-8 space-y-4">
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                  {% for category, message in messages %}
+                    <div class="flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm {{ 'border-red-200 bg-red-50 text-red-700' if category == 'error' else 'border-emerald-200 bg-emerald-50 text-emerald-700' }}" data-flash-alert>
+                      <svg class="mt-0.5 h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 8v5M12 16.5h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      </svg>
+                      <span class="flex-1">{{ message }}</span>
+                      <button type="button" class="rounded-lg p-1 text-current opacity-70 transition hover:bg-black/5 hover:opacity-100" data-close-alert aria-label="Đóng thông báo">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
+
+              <div id="registerError" class="hidden items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <svg class="mt-0.5 h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 8v5M12 16.5h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span id="registerErrorText" class="flex-1"></span>
+              </div>
+
+              <form id="registerForm" method="POST" action="{{ url_for('register') }}" class="space-y-5">
+                <div>
+                  <label for="studentName" class="block text-sm font-semibold text-slate-800">Họ và tên học sinh</label>
+                  <div class="relative mt-2">
+                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2" />
+                        <path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      </svg>
+                    </span>
+                    <input
+                      id="studentName"
+                      type="text"
+                      name="name"
+                      autocomplete="name"
+                      placeholder="Ví dụ: Nguyễn Văn A"
+                      required
+                      class="h-14 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-base text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  id="submitBtn"
+                  class="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 px-5 text-base font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 disabled:pointer-events-none disabled:opacity-70"
+                >
+                  <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                      <path fill="#4285F4" d="M21.6 12.23c0-.78-.07-1.53-.2-2.23H12v4.22h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.9-1.75 2.98-4.33 2.98-7.51Z" />
+                      <path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.44l-3.24-2.5c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.76-5.59-4.12H3.07v2.59A10 10 0 0 0 12 22Z" />
+                      <path fill="#FBBC05" d="M6.41 13.9a6 6 0 0 1 0-3.8V7.51H3.07a10 10 0 0 0 0 8.98l3.34-2.59Z" />
+                      <path fill="#EA4335" d="M12 5.98c1.47 0 2.78.5 3.82 1.5l2.87-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.93 5.51l3.34 2.59C7.2 7.74 9.4 5.98 12 5.98Z" />
+                    </svg>
+                  </span>
+                  <span id="submitText">Tạo tài khoản với Google</span>
+                </button>
+              </form>
+            </div>
+
+            <div class="mt-8 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600 ring-1 ring-slate-200">
+              <div class="flex gap-3">
+                <svg class="mt-0.5 h-5 w-5 flex-none text-emerald-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="2" />
+                  <path d="m8 12 2.2 2.2L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p>Tên học sinh được dùng trong trang quản trị và báo cáo năng lực. Email lấy từ Google để đồng bộ hồ sơ.</p>
+              </div>
+            </div>
+
+            <p class="mt-8 text-center text-sm text-slate-500">
+              Đã có tài khoản?
+              <a href="{{ url_for('login') }}" class="font-semibold text-emerald-700 transition hover:text-emerald-800">
+                Đăng nhập ngay
+              </a>
+            </p>
+          </div>
+        </div>
+
+        <div class="hidden min-h-[660px] bg-slate-950 p-10 text-white lg:block">
+          <div class="flex h-full flex-col justify-between">
+            <div>
+              <div class="inline-flex items-center gap-3 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-emerald-100 ring-1 ring-white/15">
+                <span class="h-2.5 w-2.5 rounded-full bg-emerald-300"></span>
+                Firebase + Google Login
+              </div>
+
+              <div class="mt-16 max-w-xl">
+                <p class="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-200">Student profile</p>
+                <h2 class="mt-5 text-5xl font-bold leading-[1.05] text-white">
+                  Một tài khoản, nhiều lần học được nối tiếp.
+                </h2>
+                <p class="mt-6 text-lg leading-8 text-slate-300">
+                  Hồ sơ học sinh lưu lịch sử câu hỏi, mức năng lực và nhận xét để giáo viên theo dõi tiến bộ theo thời gian.
+                </p>
+              </div>
+            </div>
+
+            <div class="grid gap-3">
+              <div class="rounded-2xl bg-white/10 p-5 ring-1 ring-white/10">
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <p class="text-sm font-medium text-slate-300">Đăng ký</p>
+                    <p class="mt-1 text-2xl font-bold text-white">Google Auth</p>
+                  </div>
+                  <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-950">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div class="rounded-2xl bg-white/10 p-5 ring-1 ring-white/10">
+                  <p class="text-3xl font-bold text-white">UID</p>
+                  <p class="mt-1 text-sm text-slate-300">định danh học sinh</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 p-5 ring-1 ring-white/10">
+                  <p class="text-3xl font-bold text-white">CSV</p>
+                  <p class="mt-1 text-sm text-slate-300">xuất báo cáo admin</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script id="firebase-config" type="application/json">{{ firebase_config|tojson }}</script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+
+    const firebaseConfig = JSON.parse(document.getElementById("firebase-config").textContent);
+    const firebaseApp = initializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    const provider = new GoogleAuthProvider();
+    const form = document.getElementById("registerForm");
+    const nameInput = document.getElementById("studentName");
+    const submitBtn = document.getElementById("submitBtn");
+    const submitText = document.getElementById("submitText");
+    const errorBox = document.getElementById("registerError");
+    const errorText = document.getElementById("registerErrorText");
+
+    function showError(message) {
+      errorText.textContent = message;
+      errorBox.classList.remove("hidden");
+      errorBox.classList.add("flex");
+    }
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      submitText.textContent = isLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản với Google";
+    }
+
+    document.querySelectorAll("[data-close-alert]").forEach((button) => {
+      button.addEventListener("click", () => {
+        button.closest("[data-flash-alert]")?.remove();
       });
-      
-      // Hiệu ứng cho nút đăng ký
-      const registerBtn = document.querySelector('.btn-register');
-      if (registerBtn) {
-        registerBtn.addEventListener('mouseenter', function() {
-          this.style.transform = 'translateY(-2px)';
-        });
-        
-        registerBtn.addEventListener('mouseleave', function() {
-          if (document.activeElement !== this) {
-            this.style.transform = 'translateY(0)';
-          }
-        });
-        
-        registerBtn.addEventListener('mousedown', function() {
-          this.style.transform = 'translateY(0)';
-        });
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const name = nameInput.value.trim();
+      if (!name) {
+        showError("Vui lòng nhập họ tên học sinh.");
+        nameInput.focus();
+        return;
       }
-      
-      // Kiểm tra độ mạnh mật khẩu
-      const passwordInput = document.getElementById('password');
-      const strengthFill = document.getElementById('strengthFill');
-      const strengthText = document.getElementById('strengthText');
-      
-      passwordInput.addEventListener('input', function() {
-        const password = this.value;
-        let strength = 0;
-        
-        // Kiểm tra độ dài
-        if (password.length >= 6) strength += 1;
-        if (password.length >= 8) strength += 1;
-        
-        // Kiểm tra ký tự đặc biệt
-        if (/[A-Z]/.test(password)) strength += 1;
-        if (/[0-9]/.test(password)) strength += 1;
-        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-        
-        // Cập nhật thanh và văn bản
-        let width = 0;
-        let color = '#ef4444';
-        let text = 'Yếu';
-        
-        if (strength <= 1) {
-          width = 25;
-          color = '#ef4444';
-          text = 'Yếu';
-        } else if (strength <= 3) {
-          width = 50;
-          color = '#f59e0b';
-          text = 'Trung bình';
-        } else if (strength <= 4) {
-          width = 75;
-          color = '#10b981';
-          text = 'Mạnh';
-        } else {
-          width = 100;
-          color = '#10b981';
-          text = 'Rất mạnh';
-        }
-        
-        strengthFill.style.width = width + '%';
-        strengthFill.style.backgroundColor = color;
-        strengthText.textContent = text;
-        strengthText.style.color = color;
-      });
-      
-      // Tự động đóng thông báo sau 5 giây
-      setTimeout(function() {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-          const bsAlert = new bootstrap.Alert(alert);
-          setTimeout(() => bsAlert.close(), 100);
+
+      setLoading(true);
+      errorBox.classList.add("hidden");
+      errorBox.classList.remove("flex");
+
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const idToken = await result.user.getIdToken();
+        const response = await fetch("{{ url_for('firebase_login') }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken, name }),
         });
-      }, 5000);
-      
-      // Hiệu ứng loading khi submit
-      const form = document.getElementById('registerForm');
-      const submitBtn = document.getElementById('submitBtn');
-      
-      form.addEventListener('submit', function(e) {
-        // Kiểm tra mật khẩu yêu cầu tối thiểu
-        const password = passwordInput.value;
-        if (password.length < 6) {
-          e.preventDefault();
-          alert('Mật khẩu phải có ít nhất 6 ký tự!');
-          return;
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Không thể đăng ký bằng Google.");
         }
-        
-        // Hiệu ứng loading
-        if (submitBtn) {
-          const originalText = submitBtn.innerHTML;
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
-          submitBtn.disabled = true;
-          
-          // Reset sau 5 giây nếu có lỗi
-          setTimeout(() => {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-          }, 5000);
-        }
-      });
-      
-      // Tự động focus vào input đầu tiên
-      if (inputs.length > 0) {
-        inputs[0].focus();
+
+        window.location.href = data.redirect;
+      } catch (error) {
+        showError(error.message || "Không thể đăng ký bằng Google.");
+        setLoading(false);
       }
     });
+
+    nameInput.focus();
   </script>
 </body>
 </html>

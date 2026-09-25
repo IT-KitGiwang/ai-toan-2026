@@ -1,11 +1,8 @@
 Flask
-Flask-Session
-Flask-SQLAlchemy
-psycopg2-binary
 python-dotenv
 openai
 PyPDF2
 Werkzeug
-Flask-Migrate
 pandas
 gunicorn
+firebase-admin

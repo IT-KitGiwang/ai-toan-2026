@@ -379,10 +379,11 @@
 
         /* Column widths */
         th:nth-child(1), td:nth-child(1) { width: 8%; }
-        th:nth-child(2), td:nth-child(2) { width: 22%; }
-        th:nth-child(3), td:nth-child(3) { width: 15%; }
-        th:nth-child(4), td:nth-child(4) { width: 30%; }
-        th:nth-child(5), td:nth-child(5) { width: 25%; }
+        th:nth-child(2), td:nth-child(2) { width: 20%; }
+        th:nth-child(3), td:nth-child(3) { width: 14%; }
+        th:nth-child(4), td:nth-child(4) { width: 10%; }
+        th:nth-child(5), td:nth-child(5) { width: 28%; }
+        th:nth-child(6), td:nth-child(6) { width: 20%; }
 
         /* Styled cells */
         .level-cell {
@@ -604,6 +605,7 @@
                             <th><i class="fas fa-hashtag"></i> ID</th>
                             <th><i class="fas fa-user"></i> Tên đăng nhập</th>
                             <th><i class="fas fa-star"></i> Năng lực</th>
+                            <th><i class="fas fa-gauge-high"></i> Điểm</th>
                             <th><i class="fas fa-comment-dots"></i> Lý do đánh giá</th>
                             <th><i class="fas fa-history"></i> Lịch sử học tập</th>
                         </tr>
@@ -618,13 +620,14 @@
                                     <i class="fas fa-chart-line"></i> {{ user.level }}
                                 </span>
                             </td>
+                            <td><strong>{{ user.score }}/100</strong></td>
                             <td><div class="lydo-cell">{{ user.lydo }}</div></td>
                             <td><div class="history-cell">{{ user.history }}</div></td>
                         </tr>
                         {% endfor %}
                         {% if not user_data %}
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 40px; color: var(--gray);">
+                            <td colspan="6" style="text-align: center; padding: 40px; color: var(--gray);">
                                 <i class="fas fa-user-graduate" style="font-size: 48px; margin-bottom: 15px; display: block; color: #cbd5e1;"></i>
                                 Chưa có dữ liệu học sinh. Hãy bắt đầu đánh giá!
                             </td>

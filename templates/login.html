@@ -2,497 +2,214 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Đăng nhập - Trợ lý AI Học Toán</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    :root {
-      --primary-color: #4a6bff;
-      --secondary-color: #6c8eff;
-      --accent-color: #ff6b8b;
-      --light-color: #f8f9ff;
-      --dark-color: #2d3748;
-    }
-    
-    body {
-      background: linear-gradient( 
-        rgba(252, 88, 88, 0.92) 14%, 
-        rgba(77, 104, 253, 0.92) 30%),
-        url('https://image.slidesdocs.com/responsive-images/background/education-cute-mathematics-notebook-ruler-pink-powerpoint-background_829deb8b68__783_440.jpg');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      min-height: 100vh;
-      font-family: 'Segoe UI', 'Inter', sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    
-    .login-wrapper {
-      width: 100%;
-      max-width: 500px;
-      animation: fadeIn 0.8s ease-out;
-    }
-    
-    .login-card {
-      background: white;
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 
-        0 20px 60px rgba(74, 107, 255, 0.15),
-        0 5px 20px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
-      border: none;
-      transition: transform 0.3s ease;
-    }
-    
-    .login-card:hover {
-      transform: translateY(-5px);
-    }
-    
-    .card-header {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      padding: 40px 30px 30px;
-      text-align: center;
-      border-bottom: none;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .card-header::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 10px;
-      background: linear-gradient(90deg, 
-        var(--accent-color) 0%, 
-        #ff9a9e 25%, 
-        #fad0c4 50%, 
-        #ffd1ff 75%, 
-        var(--accent-color) 100%);
-    }
-    
-    .logo-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    
-    .logo-icon {
-      width: 80px;
-      height: 80px;
-      background: white;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .logo-icon::before {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
-      animation: shine 3s infinite;
-    }
-    
-    .logo-icon i {
-      font-size: 36px;
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      z-index: 1;
-    }
-    
-    .app-title {
-      font-size: 28px;
-      font-weight: 800;
-      color: white;
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-    }
-    
-    .app-subtitle {
-      font-size: 16px;
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 400;
-    }
-    
-    .card-body {
-      padding: 40px 35px 35px;
-    }
-    
-    .login-title {
-      text-align: center;
-      color: var(--dark-color);
-      font-weight: 700;
-      margin-bottom: 30px;
-      font-size: 22px;
-      position: relative;
-      padding-bottom: 15px;
-    }
-    
-    .login-title::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 4px;
-      background: linear-gradient(90deg, var(--accent-color), #ff9a9e);
-      border-radius: 2px;
-    }
-    
-    .form-group {
-      margin-bottom: 25px;
-    }
-    
-    .form-label {
-      display: flex;
-      align-items: center;
-      font-weight: 600;
-      color: var(--dark-color);
-      margin-bottom: 10px;
-      font-size: 15px;
-    }
-    
-    .form-label i {
-      margin-right: 10px;
-      color: var(--primary-color);
-      font-size: 18px;
-      width: 24px;
-      text-align: center;
-    }
-    
-    .input-with-icon {
-      position: relative;
-    }
-    
-    .input-with-icon i {
-      position: absolute;
-      left: 18px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--primary-color);
-      font-size: 18px;
-      z-index: 2;
-    }
-    
-    .form-control {
-      width: 100%;
-      padding: 16px 20px 16px 55px;
-      border: 2px solid #e2e8f0;
-      border-radius: 14px;
-      font-size: 16px;
-      transition: all 0.3s;
-      background-color: #f8f9ff;
-      color: var(--dark-color);
-    }
-    
-    .form-control:focus {
-      border-color: var(--primary-color);
-      background-color: white;
-      box-shadow: 0 0 0 4px rgba(74, 107, 255, 0.15);
-      outline: none;
-    }
-    
-    .form-control::placeholder {
-      color: #a0aec0;
-    }
-    
-    .btn-login {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      border: none;
-      color: white;
-      padding: 17px;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      transition: all 0.3s;
-      margin-top: 10px;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      box-shadow: 0 8px 20px rgba(74, 107, 255, 0.3);
-    }
-    
-    .btn-login:hover {
-      background: linear-gradient(135deg, #3a5bff, #5b7eff);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 25px rgba(74, 107, 255, 0.4);
-      color: white;
-    }
-    
-    .btn-login:active {
-      transform: translateY(0);
-    }
-    
-    .register-link {
-      text-align: center;
-      margin-top: 25px;
-      padding-top: 25px;
-      border-top: 1px solid #edf2f7;
-    }
-    
-    .register-link a {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 15px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.3s;
-    }
-    
-    .register-link a:hover {
-      color: var(--secondary-color);
-      text-decoration: underline;
-    }
-    
-    .alert {
-      border-radius: 14px;
-      border: none;
-      padding: 16px 20px;
-      margin-bottom: 25px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      animation: slideIn 0.5s ease-out;
-    }
-    
-    .alert-danger {
-      background-color: #fff5f5;
-      color: #e53e3e;
-      border-left: 4px solid #e53e3e;
-    }
-    
-    .alert-success {
-      background-color: #f0fff4;
-      color: #38a169;
-      border-left: 4px solid #38a169;
-    }
-    
-    .footer-note {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 13px;
-      color: #718096;
-      line-height: 1.5;
-    }
-    
-    .math-decorations {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: -1;
-    }
-    
-    .math-symbol {
-      position: absolute;
-      font-size: 28px;
-      font-weight: bold;
-      opacity: 0.08;
-      color: var(--primary-color);
-    }
-    
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    
-    @keyframes shine {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-15px) rotate(5deg); }
-    }
-    
-    .floating {
-      animation: float 8s ease-in-out infinite;
-    }
-    
-    /* Responsive */
-    @media (max-width: 576px) {
-      .card-body {
-        padding: 30px 25px;
-      }
-      
-      .card-header {
-        padding: 30px 20px 25px;
-      }
-      
-      .app-title {
-        font-size: 24px;
-      }
-      
-      .logo-icon {
-        width: 70px;
-        height: 70px;
-      }
-      
-      .logo-icon i {
-        font-size: 32px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <!-- Background decorations -->
-  <div class="math-decorations">
-    <div class="math-symbol floating" style="top: 15%; left: 8%;">∫</div>
-    <div class="math-symbol floating" style="top: 20%; right: 8%; animation-delay: 1s;">∑</div>
-    <div class="math-symbol floating" style="bottom: 25%; left: 10%; animation-delay: 2s;">π</div>
-    <div class="math-symbol floating" style="bottom: 15%; right: 5%; animation-delay: 3s;">∞</div>
-    <div class="math-symbol floating" style="top: 45%; left: 5%; animation-delay: 4s;">√</div>
-    <div class="math-symbol floating" style="top: 55%; right: 5%; animation-delay: 5s;">θ</div>
-    <div class="math-symbol floating" style="top: 35%; left: 15%; animation-delay: 6s;">Δ</div>
-    <div class="math-symbol floating" style="top: 65%; right: 15%; animation-delay: 7s;">≈</div>
-  </div>
-  
-  <div class="login-wrapper">
-    <div class="card login-card">
-      <div class="card-header">
-        <div class="logo-container">
-          <div class="logo-icon">
-            <i class="fas fa-robot"></i>
-          </div>
-          <h1 class="app-title">Trợ lý AI Học Toán</h1>
-          <p class="app-subtitle">Toán Anh - Việt tích hợp đánh giá năng lực</p>
-        </div>
-      </div>
-      
-      <div class="card-body">
-        <h3 class="login-title">Đăng nhập tài khoản</h3>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
-                <i class="fas fa-{{ 'exclamation-circle' if category == 'error' else 'check-circle' }} fa-lg"></i>
-                <div class="flex-grow-1">{{ message }}</div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-
-        <form method="POST" action="{{ url_for('login') }}">
-          <div class="form-group">
-            <label class="form-label">
-              <i class="fas fa-user"></i> Tên đăng nhập
-            </label>
-            <div class="input-with-icon">
-              <i class="fas fa-user-circle"></i>
-              <input type="text" name="username" class="form-control" placeholder="Nhập tên đăng nhập của bạn" required />
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label">
-              <i class="fas fa-key"></i> Mật khẩu
-            </label>
-            <div class="input-with-icon">
-              <i class="fas fa-lock"></i>
-              <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu của bạn" required />
-            </div>
-          </div>
-          
-          <button type="submit" class="btn btn-login">
-            <i class="fas fa-sign-in-alt"></i> Đăng nhập ngay
-          </button>
-        </form>
-        
-        <div class="register-link">
-          <a href="{{ url_for('register') }}">
-            <i class="fas fa-user-plus"></i> Chưa có tài khoản? Đăng ký ngay
-          </a>
-        </div>
-        
-        <div class="footer-note">
-          <p>Hệ thống Trợ lý AI Học Toán dành cho học sinh cấp 2<br>
-          <small>Phiên bản 2.0 • © 2023 - Toán Anh-Việt Tích hợp</small></p>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Hiệu ứng tương tác
-    document.addEventListener('DOMContentLoaded', function() {
-      // Hiệu ứng focus cho input
-      const inputs = document.querySelectorAll('.form-control');
-      inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-          this.parentElement.style.transform = 'scale(1.02)';
-        });
-        
-        input.addEventListener('blur', function() {
-          this.parentElement.style.transform = 'scale(1)';
-        });
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui", "Segoe UI", "sans-serif"],
+          },
+          boxShadow: {
+            soft: "0 24px 80px rgba(15, 23, 42, 0.16)",
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-[#f6f8fc] text-slate-900 antialiased">
+  <main class="relative min-h-screen overflow-hidden">
+    <div class="absolute inset-0">
+      <img
+        src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1800&q=80"
+        alt=""
+        class="h-full w-full object-cover"
+      />
+      <div class="absolute inset-0 bg-white/80"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(37,99,235,0.18),transparent_34%),radial-gradient(circle_at_80%_10%,rgba(20,184,166,0.16),transparent_30%),radial-gradient(circle_at_60%_90%,rgba(249,115,22,0.14),transparent_32%)]"></div>
+    </div>
+
+    <section class="relative z-10 flex min-h-screen items-center px-4 py-8 sm:px-6 lg:px-8">
+      <div class="mx-auto grid w-full max-w-6xl overflow-hidden rounded-[28px] bg-white shadow-soft ring-1 ring-slate-200 lg:grid-cols-[1.05fr_0.95fr]">
+        <div class="hidden min-h-[680px] flex-col justify-between bg-slate-950 p-10 text-white lg:flex">
+          <div>
+            <div class="inline-flex items-center gap-3 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-cyan-100 ring-1 ring-white/15">
+              <span class="flex h-2.5 w-2.5 rounded-full bg-cyan-300"></span>
+              Toán Anh - Việt tích hợp AI
+            </div>
+
+            <div class="mt-16 max-w-xl">
+              <p class="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-200">AI Math Assistant</p>
+              <h1 class="mt-5 text-5xl font-bold leading-[1.05] text-white">
+                Học toán rõ ràng hơn, từng bước một.
+              </h1>
+              <p class="mt-6 text-lg leading-8 text-slate-300">
+                Đăng nhập bằng Google để lưu lịch sử học tập, theo dõi năng lực và tiếp tục cuộc trò chuyện ở lần học sau.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div class="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
+              <p class="text-3xl font-bold text-white">10</p>
+              <p class="mt-1 text-sm text-slate-300">câu hỏi để đánh giá</p>
+            </div>
+            <div class="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
+              <p class="text-3xl font-bold text-white">2</p>
+              <p class="mt-1 text-sm text-slate-300">ngôn ngữ song hành</p>
+            </div>
+            <div class="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
+              <p class="text-3xl font-bold text-white">AI</p>
+              <p class="mt-1 text-sm text-slate-300">hỗ trợ theo năng lực</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex min-h-[640px] items-center justify-center px-5 py-10 sm:px-10 lg:px-12">
+          <div class="w-full max-w-md">
+            <div class="flex justify-center lg:hidden">
+              <div class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 ring-1 ring-blue-100">
+                <span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>
+                Trợ lý AI Học Toán
+              </div>
+            </div>
+
+            <div class="mt-8 text-center lg:mt-0 lg:text-left">
+              <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/25 lg:mx-0">
+                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M6 8h12M8 12h8M10 16h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v13A2.5 2.5 0 0 1 17.5 21h-11A2.5 2.5 0 0 1 4 18.5v-13Z" stroke="currentColor" stroke-width="2" />
+                </svg>
+              </div>
+              <h2 class="mt-6 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Đăng nhập</h2>
+              <p class="mt-3 text-base leading-7 text-slate-600">
+                Dùng tài khoản Google để vào lớp học. Email admin sẽ được chuyển thẳng đến trang quản trị.
+              </p>
+            </div>
+
+            <div class="mt-8 space-y-4">
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                  {% for category, message in messages %}
+                    <div class="flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm {{ 'border-red-200 bg-red-50 text-red-700' if category == 'error' else 'border-emerald-200 bg-emerald-50 text-emerald-700' }}" data-flash-alert>
+                      <svg class="mt-0.5 h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 8v5M12 16.5h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      </svg>
+                      <span class="flex-1">{{ message }}</span>
+                      <button type="button" class="rounded-lg p-1 text-current opacity-70 transition hover:bg-black/5 hover:opacity-100" data-close-alert aria-label="Đóng thông báo">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
+
+              <div id="loginError" class="hidden items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <svg class="mt-0.5 h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 8v5M12 16.5h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span id="loginErrorText" class="flex-1"></span>
+              </div>
+
+              <button
+                type="button"
+                id="googleLoginBtn"
+                class="group flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 text-base font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-100 disabled:pointer-events-none disabled:opacity-70"
+              >
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200">
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M21.6 12.23c0-.78-.07-1.53-.2-2.23H12v4.22h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.9-1.75 2.98-4.33 2.98-7.51Z" />
+                    <path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.44l-3.24-2.5c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.76-5.59-4.12H3.07v2.59A10 10 0 0 0 12 22Z" />
+                    <path fill="#FBBC05" d="M6.41 13.9a6 6 0 0 1 0-3.8V7.51H3.07a10 10 0 0 0 0 8.98l3.34-2.59Z" />
+                    <path fill="#EA4335" d="M12 5.98c1.47 0 2.78.5 3.82 1.5l2.87-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.93 5.51l3.34 2.59C7.2 7.74 9.4 5.98 12 5.98Z" />
+                  </svg>
+                </span>
+                <span id="googleLoginText">Tiếp tục với Google</span>
+              </button>
+            </div>
+
+            <div class="mt-8 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600 ring-1 ring-slate-200">
+              <div class="flex gap-3">
+                <svg class="mt-0.5 h-5 w-5 flex-none text-blue-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 3 5 6v5c0 4.55 2.98 8.8 7 10 4.02-1.2 7-5.45 7-10V6l-7-3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                  <path d="m9 12 2 2 4-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p>Lịch sử học tập và năng lực của học sinh được đồng bộ theo tài khoản Google trên Firebase.</p>
+              </div>
+            </div>
+
+            <p class="mt-8 text-center text-sm text-slate-500">
+              Chưa có tài khoản?
+              <a href="{{ url_for('register') }}" class="font-semibold text-blue-700 transition hover:text-blue-800">
+                Đăng ký bằng Google
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script id="firebase-config" type="application/json">{{ firebase_config|tojson }}</script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+
+    const firebaseConfig = JSON.parse(document.getElementById("firebase-config").textContent);
+    const firebaseApp = initializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    const provider = new GoogleAuthProvider();
+    const loginBtn = document.getElementById("googleLoginBtn");
+    const loginText = document.getElementById("googleLoginText");
+    const errorBox = document.getElementById("loginError");
+    const errorText = document.getElementById("loginErrorText");
+
+    function showError(message) {
+      errorText.textContent = message;
+      errorBox.classList.remove("hidden");
+      errorBox.classList.add("flex");
+    }
+
+    function setLoading(isLoading) {
+      loginBtn.disabled = isLoading;
+      loginText.textContent = isLoading ? "Đang đăng nhập..." : "Tiếp tục với Google";
+    }
+
+    document.querySelectorAll("[data-close-alert]").forEach((button) => {
+      button.addEventListener("click", () => {
+        button.closest("[data-flash-alert]")?.remove();
       });
-      
-      // Hiệu ứng cho nút đăng nhập
-      const loginBtn = document.querySelector('.btn-login');
-      if (loginBtn) {
-        loginBtn.addEventListener('mouseenter', function() {
-          this.style.transform = 'translateY(-2px)';
+    });
+
+    loginBtn.addEventListener("click", async () => {
+      setLoading(true);
+      errorBox.classList.add("hidden");
+      errorBox.classList.remove("flex");
+
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const idToken = await result.user.getIdToken();
+        const response = await fetch("{{ url_for('firebase_login') }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken }),
         });
-        
-        loginBtn.addEventListener('mouseleave', function() {
-          if (document.activeElement !== this) {
-            this.style.transform = 'translateY(0)';
-          }
-        });
-        
-        loginBtn.addEventListener('mousedown', function() {
-          this.style.transform = 'translateY(0)';
-        });
-      }
-      
-      // Tự động đóng thông báo sau 5 giây
-      setTimeout(function() {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-          const bsAlert = new bootstrap.Alert(alert);
-          setTimeout(() => bsAlert.close(), 100);
-        });
-      }, 5000);
-      
-      // Hiệu ứng nhập liệu
-      document.querySelector('form').addEventListener('submit', function(e) {
-        const btn = this.querySelector('.btn-login');
-        if (btn) {
-          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...';
-          btn.disabled = true;
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Không thể đăng nhập bằng Google.");
         }
-      });
+
+        window.location.href = data.redirect;
+      } catch (error) {
+        showError(error.message || "Không thể đăng nhập bằng Google.");
+        setLoading(false);
+      }
     });
   </script>
 </body>

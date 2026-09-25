@@ -1,629 +1,456 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI hỗ trợ học Toán Anh - Việt THCS</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            tex2jax: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']], processEscapes: true },
-            showProcessingMessages: false,
-            messageStyle: "none"
-        });
-    </script>
-    <style>
-        :root {
-            --primary: #4a6bff;
-            --primary-light: #6c8eff;
-            --primary-dark: #3a5bff;
-            --secondary: #ff6b8b;
-            --accent: #facc15;
-            --success: #10b981;
-            --danger: #ef4444;
-            --dark: #1f2937;
-            --gray: #6b7280;
-            --gray-light: #9ca3af;
-            --border: #e5e7eb;
-            --card-bg: #ffffff;
-            --chat-bg: #f1f5f9;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI hỗ trợ học Toán Anh - Việt THCS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui", "Segoe UI", "sans-serif"],
+          },
+          boxShadow: {
+            soft: "0 20px 70px rgba(15, 23, 42, 0.10)",
+          },
+        },
+      },
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']], processEscapes: true },
+      showProcessingMessages: false,
+      messageStyle: "none"
+    });
+  </script>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-light: #38bdf8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --accent: #f59e0b;
+    }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
 
-        html, body {
-            height: 100%;
-            overflow: hidden;
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            color: var(--dark);
-        }
+    body {
+      font-family: "Inter", "Segoe UI", sans-serif;
+    }
 
-        body {
-            display: flex;
-            flex-direction: column;
-            background: var(--chat-bg);
-        }
+    .chat-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
 
-        /* ===== HEADER ===== */
-        .header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-            box-shadow: 0 2px 12px rgba(74,107,255,0.25);
-            z-index: 20;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header-title {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-        .header-subtitle {
-            font-size: 12px;
-            opacity: 0.85;
-            font-weight: 400;
-        }
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .header-badge {
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(8px);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: white;
-        }
-        .header-badge.level {
-            background: linear-gradient(135deg, var(--accent), #fbbf24);
-            color: var(--dark);
-        }
-        .header-btn {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.25);
-            color: white;
-            padding: 7px 14px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .header-btn:hover { background: rgba(255,255,255,0.25); }
-        .header-btn.danger { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); }
-        .header-btn.danger:hover { background: rgba(239,68,68,0.35); }
+    .chat-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
 
-        /* ===== MAIN LAYOUT ===== */
-        .main-container {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-        }
+    .chat-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
 
-        /* ===== SIDEBAR ===== */
-        .sidebar {
-            width: 260px;
-            background: var(--card-bg);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            overflow-y: auto;
-        }
-        .sidebar-section {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .sidebar-section:last-child { border-bottom: none; }
-        .sidebar-label {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--gray-light);
-            margin-bottom: 10px;
-        }
-        .sidebar-nav { display: flex; flex-direction: column; gap: 6px; }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--dark);
-            text-decoration: none;
-            transition: all 0.15s;
-            border: none;
-            background: none;
-            cursor: pointer;
-            width: 100%;
-            text-align: left;
-        }
-        .nav-item:hover { background: #f1f5f9; }
-        .nav-item i { width: 18px; text-align: center; color: var(--gray); font-size: 15px; }
-        .nav-item.active { background: #eef2ff; color: var(--primary); }
-        .nav-item.active i { color: var(--primary); }
-        .sidebar-info {
-            font-size: 12px;
-            color: var(--gray);
-            line-height: 1.5;
-        }
-        .sidebar-info strong {
-            color: var(--dark);
-            font-weight: 600;
-        }
+    .msg-row {
+      display: flex;
+      gap: 0.75rem;
+      max-width: min(860px, 88%);
+      animation: msgIn 0.22s ease-out;
+    }
 
-        /* ===== CHAT AREA ===== */
-        .chat-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            overflow: hidden;
-        }
+    .msg-row.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
 
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: var(--chat-bg);
-            scroll-behavior: smooth;
-        }
+    .msg-row.ai {
+      align-self: flex-start;
+    }
 
-        /* ===== MESSAGES ===== */
-        .msg-row {
-            display: flex;
-            gap: 10px;
-            max-width: 78%;
-            animation: msgIn 0.25s ease-out;
-        }
-        .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
-        .msg-row.ai { align-self: flex-start; }
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-        @keyframes msgIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    .msg-avatar {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      margin-top: 0.125rem;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.10);
+    }
 
-        .msg-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-        .msg-row.ai .msg-avatar {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-        }
-        .msg-row.user .msg-avatar {
-            background: linear-gradient(135deg, #10b981, #34d399);
-            color: white;
-        }
+    .msg-row.ai .msg-avatar {
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      color: #fff;
+    }
 
-        .msg-bubble {
-            padding: 10px 14px;
-            border-radius: 16px;
-            font-size: 14px;
-            line-height: 1.55;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-        .msg-row.ai .msg-bubble {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 4px 16px 16px 16px;
-            color: var(--dark);
-        }
-        .msg-row.user .msg-bubble {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            border-radius: 16px 4px 16px 16px;
-        }
+    .msg-row.user .msg-avatar {
+      background: linear-gradient(135deg, #10b981, #84cc16);
+      color: #fff;
+    }
 
-        /* ===== AI MESSAGE MARKDOWN CONTENT ===== */
-        .msg-bubble p { margin: 0 0 6px 0; }
-        .msg-bubble p:last-child { margin-bottom: 0; }
+    .msg-bubble {
+      border-radius: 1.25rem;
+      padding: 0.9rem 1rem;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
 
-        .msg-bubble strong { font-weight: 700; }
-        .msg-bubble em { font-style: italic; }
+    .msg-row.ai .msg-bubble {
+      background: #ffffff;
+      border: 1px solid #dbeafe;
+      color: #0f172a;
+      border-top-left-radius: 0.35rem;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
 
-        .msg-bubble br { line-height: 0.6; }
+    .msg-row.user .msg-bubble {
+      background: linear-gradient(135deg, #2563eb, #0891b2);
+      color: #ffffff;
+      border-top-right-radius: 0.35rem;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+    }
 
-        .msg-bubble ul, .msg-bubble ol {
-            margin: 4px 0 6px 0;
-            padding-left: 20px;
-        }
-        .msg-bubble li {
-            margin-bottom: 2px;
-            line-height: 1.5;
-        }
+    .msg-bubble h1,
+    .msg-bubble h2,
+    .msg-bubble h3 {
+      color: #0f172a !important;
+    }
 
-        /* Bullet style from format_response: "• " */
-        .msg-bubble span[style*="line-height:1.6"] {
-            line-height: 1.45 !important;
-        }
+    .msg-bubble .MathJax_Display {
+      margin: 0.55rem 0 !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
 
-        /* Highlight keyword tags */
-        .msg-bubble span[style*="border-radius:4px"] {
-            display: inline;
-            font-size: 13px;
-            padding: 1px 6px !important;
-            border-radius: 4px !important;
-            vertical-align: baseline;
-        }
+    .typing-row {
+      display: flex;
+      gap: 0.75rem;
+      align-self: flex-start;
+      max-width: 180px;
+    }
 
-        /* Math display blocks */
-        .msg-bubble .MathJax_Display {
-            margin: 6px 0 !important;
-            overflow-x: auto;
-        }
+    .typing-dots {
+      background: #ffffff;
+      border: 1px solid #dbeafe;
+      border-radius: 0.35rem 1.25rem 1.25rem 1.25rem;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
 
-        /* ===== WELCOME MESSAGE ===== */
-        .welcome-card {
-            background: linear-gradient(135deg, #eef2ff, #f0f9ff);
-            border: 1px solid #c7d2fe;
-            border-radius: 16px;
-            padding: 20px;
-            max-width: 520px;
-            align-self: center;
-            animation: msgIn 0.3s;
-        }
-        .welcome-card h3 {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            color: var(--primary-dark);
-        }
-        .welcome-card p {
-            font-size: 14px;
-            color: var(--gray);
-            margin-bottom: 12px;
-        }
-        .welcome-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .wb {
-            padding: 5px 12px;
-            border-radius: 16px;
-            font-weight: 600;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            color: white;
-        }
-        .wb.green { background: #10b981; }
-        .wb.blue { background: #3b82f6; }
-        .wb.amber { background: #f59e0b; }
-        .wb.purple { background: #8b5cf6; }
-        .welcome-tip {
-            margin-top: 10px;
-            font-size: 12px;
-            color: var(--gray);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+    .typing-dots span {
+      width: 0.45rem;
+      height: 0.45rem;
+      background: #2563eb;
+      border-radius: 999px;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
 
-        /* ===== TYPING INDICATOR ===== */
-        .typing-row {
-            display: flex;
-            gap: 10px;
-            align-self: flex-start;
-            max-width: 160px;
-        }
-        .typing-dots {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 4px 16px 16px 16px;
-            padding: 12px 18px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .typing-dots span {
-            width: 8px; height: 8px;
-            background: var(--primary);
-            border-radius: 50%;
-            animation: bounce 1.3s infinite ease-in-out;
-        }
-        .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes bounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-6px); }
-        }
+    .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
 
-        /* ===== CHAT INPUT ===== */
-        .chat-input-bar {
-            padding: 12px 20px;
-            background: var(--card-bg);
-            border-top: 1px solid var(--border);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .chat-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1.5px solid var(--border);
-            border-radius: 12px;
-            font-size: 14px;
-            font-family: inherit;
-            background: var(--chat-bg);
-            outline: none;
-            transition: border 0.2s, box-shadow 0.2s;
-        }
-        .chat-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(74,107,255,0.12);
-            background: white;
-        }
-        .send-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 22px;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(74,107,255,0.25);
-            flex-shrink: 0;
-        }
-        .send-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(74,107,255,0.35);
-        }
-        .send-btn:active { transform: translateY(0); }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
 
-        /* ===== SCROLLBAR ===== */
-        .chat-messages::-webkit-scrollbar { width: 6px; }
-        .chat-messages::-webkit-scrollbar-track { background: transparent; }
-        .chat-messages::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 6px; }
-        .chat-messages::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    @media (max-width: 640px) {
+      .msg-row {
+        max-width: 96%;
+        gap: 0.5rem;
+      }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 900px) {
-            .sidebar { display: none; }
-            .header { padding: 10px 16px; }
-            .header-title { font-size: 15px; }
-            .header-subtitle { display: none; }
-            .msg-row { max-width: 90%; }
-            .chat-messages { padding: 14px; }
-            .chat-input-bar { padding: 10px 14px; }
-        }
-        @media (max-width: 600px) {
-            .header-actions { gap: 6px; }
-            .header-btn span { display: none; }
-            .header-badge.level span.label { display: none; }
-            .msg-row { max-width: 95%; }
-            .msg-avatar { width: 28px; height: 28px; font-size: 12px; }
-            .msg-bubble { font-size: 13px; padding: 8px 12px; }
-            .chat-input { font-size: 14px; padding: 10px 14px; }
-            .send-btn { padding: 10px 16px; font-size: 13px; }
-            .send-btn span { display: none; }
-        }
-    </style>
+      .msg-avatar {
+        width: 1.9rem;
+        height: 1.9rem;
+        border-radius: 0.8rem;
+        font-size: 0.75rem;
+      }
+
+      .msg-bubble {
+        font-size: 0.88rem;
+        padding: 0.75rem 0.85rem;
+      }
+    }
+  </style>
 </head>
-<body>
+<body class="bg-sky-50 text-slate-900">
+  <div class="flex h-screen flex-col overflow-hidden">
+    <header class="z-20 border-b border-sky-100 bg-white/95 px-3 py-3 shadow-sm backdrop-blur md:px-5">
+      <div class="mx-auto flex max-w-[1500px] items-center justify-between gap-3">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
+            <i class="fas fa-robot text-lg"></i>
+          </div>
+          <div class="min-w-0">
+            <h1 class="truncate text-base font-extrabold tracking-tight text-slate-950 sm:text-lg">AI Toán Song Ngữ THCS</h1>
+            <p class="hidden text-xs font-medium text-slate-500 sm:block">Anh - Việt · Theo dõi năng lực học sinh</p>
+          </div>
+        </div>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <i class="fas fa-robot" style="font-size:22px;"></i>
-            <div>
-                <div class="header-title">AI Toán Song Ngữ THCS</div>
-                <div class="header-subtitle">Anh – Việt • Tích hợp đánh giá năng lực</div>
-            </div>
+        <div class="flex min-w-0 items-center justify-end gap-2">
+          <div class="hidden items-center gap-2 rounded-2xl bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700 ring-1 ring-blue-100 sm:flex" id="level-indicator">
+            <i class="fas fa-chart-line"></i>
+            <span class="hidden md:inline">Năng lực</span>
+            <strong id="user-level">{{ user_level }}</strong>
+          </div>
+          <div class="flex items-center gap-2 rounded-2xl bg-amber-50 px-3 py-2 text-sm font-bold text-amber-700 ring-1 ring-amber-100" id="score-indicator">
+            <i class="fas fa-gauge-high"></i>
+            <span class="hidden md:inline">Điểm</span>
+            <strong id="user-score">{{ user_score }}/100</strong>
+          </div>
+          <a href="/admin" class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 transition hover:bg-slate-200 sm:w-auto sm:px-3 sm:gap-2" aria-label="Quản lý">
+            <i class="fas fa-user-cog"></i>
+            <span class="hidden text-sm font-semibold sm:inline">Quản lý</span>
+          </a>
+          <a href="/logout" class="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-600 transition hover:bg-red-100 sm:w-auto sm:px-3 sm:gap-2" aria-label="Đăng xuất">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="hidden text-sm font-semibold sm:inline">Đăng xuất</span>
+          </a>
         </div>
-        <div class="header-actions">
-            <div class="header-badge level" id="level-indicator">
-                <i class="fas fa-chart-line"></i>
-                <span class="label">Năng lực:</span>
-                <strong id="user-level">{{ user_level }}</strong>
-            </div>
-            <a href="/admin" class="header-btn"><i class="fas fa-user-cog"></i> <span>Quản lý</span></a>
-            <a href="/logout" class="header-btn danger"><i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span></a>
-        </div>
+      </div>
     </header>
 
-    <!-- Main -->
-    <div class="main-container">
+    <div class="mx-auto grid min-h-0 w-full max-w-[1500px] flex-1 grid-cols-1 gap-4 overflow-hidden p-3 md:grid-cols-[280px_minmax(0,1fr)] md:p-5">
+      <aside class="hidden min-h-0 flex-col gap-4 overflow-y-auto md:flex">
+        <section class="rounded-3xl bg-white p-4 shadow-soft ring-1 ring-sky-100">
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-blue-500">Lớp học</p>
+          <nav class="mt-4 space-y-2">
+            <a href="/" class="flex items-center gap-3 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/20">
+              <i class="fas fa-comments w-5 text-center"></i>
+              Chat với AI
+            </a>
+            <a href="/admin" class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+              <i class="fas fa-user-graduate w-5 text-center text-emerald-600"></i>
+              Quản lý học sinh
+            </a>
+          </nav>
+        </section>
 
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-section">
-                <div class="sidebar-label">Chức năng</div>
-                <nav class="sidebar-nav">
-                    <a href="/" class="nav-item active"><i class="fas fa-comments"></i> Chat với AI</a>
-                    <a href="/admin" class="nav-item"><i class="fas fa-user-graduate"></i> Quản lý học sinh</a>
-                </nav>
-            </div>
-            <div class="sidebar-section">
-                <div class="sidebar-label">Thông tin dự án</div>
-                <div class="sidebar-info">
-                    <p><strong>Đơn vị:</strong> Trường THCS Hoài Phú</p>
-                    <p><strong>HS thực hiện:</strong> Phạm Lê Thế Dân</p>
-                    <p><strong>GVHD:</strong> Nguyễn Phương Tây</p>
-                </div>
-            </div>
-            <div class="sidebar-section">
-                <div class="sidebar-label">Trạng thái</div>
-                <div class="sidebar-info">
-                    <p>{{ rag_status }}</p>
-                </div>
-            </div>
-        </aside>
+        <section class="rounded-3xl bg-white p-4 shadow-soft ring-1 ring-sky-100">
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-blue-500">Chủ đề nhanh</p>
+          <div class="mt-4 grid grid-cols-2 gap-2">
+            <button class="quick-topic rounded-2xl bg-emerald-50 px-3 py-3 text-left text-sm font-bold text-emerald-700 ring-1 ring-emerald-100" data-prompt="Thầy hãy giải thích một bài số học THCS cơ bản.">
+              <i class="fas fa-calculator mb-2 block"></i>Số học
+            </button>
+            <button class="quick-topic rounded-2xl bg-blue-50 px-3 py-3 text-left text-sm font-bold text-blue-700 ring-1 ring-blue-100" data-prompt="Thầy hãy giúp con ôn đại số THCS.">
+              <i class="fas fa-superscript mb-2 block"></i>Đại số
+            </button>
+            <button class="quick-topic rounded-2xl bg-amber-50 px-3 py-3 text-left text-sm font-bold text-amber-700 ring-1 ring-amber-100" data-prompt="Thầy hãy hướng dẫn con một bài hình học THCS.">
+              <i class="fas fa-shapes mb-2 block"></i>Hình học
+            </button>
+            <button class="quick-topic rounded-2xl bg-fuchsia-50 px-3 py-3 text-left text-sm font-bold text-fuchsia-700 ring-1 ring-fuchsia-100" data-prompt="Thầy hãy cho con một ví dụ về xác suất hoặc thống kê THCS.">
+              <i class="fas fa-chart-bar mb-2 block"></i>Xác suất
+            </button>
+          </div>
+        </section>
 
-        <!-- Chat -->
-        <div class="chat-wrapper">
-            <div id="chat-messages" class="chat-messages">
-                <!-- Welcome -->
-                <div class="welcome-card">
-                    <h3>👋 Xin chào! Thầy là trợ lý AI Toán THCS.</h3>
-                    <p>Hãy nhập câu hỏi Toán học để thầy giúp con nhé!</p>
-                    <div class="welcome-badges">
-                        <span class="wb green"><i class="fas fa-calculator"></i> Số học</span>
-                        <span class="wb blue"><i class="fas fa-superscript"></i> Đại số</span>
-                        <span class="wb amber"><i class="fas fa-shapes"></i> Hình học</span>
-                        <span class="wb purple"><i class="fas fa-chart-bar"></i> Xác suất</span>
-                    </div>
-                    <div class="welcome-tip">
-                        <i class="fas fa-lightbulb" style="color: var(--accent);"></i>
-                        Bạn có thể hỏi bằng tiếng Việt hoặc tiếng Anh!
-                    </div>
-                </div>
-            </div>
+        <section class="rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-600 p-4 text-white shadow-soft">
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-cyan-100">Trạng thái tài liệu</p>
+          <p class="mt-3 text-sm font-semibold leading-6">{{ rag_status }}</p>
+        </section>
 
-            <!-- Input -->
-            <div class="chat-input-bar">
-                <input type="text" id="message" placeholder="Nhập câu hỏi Toán học..." class="chat-input" autocomplete="off">
-                <button id="send-btn" class="send-btn">
-                    <i class="fas fa-paper-plane"></i>
-                    <span>Gửi</span>
-                </button>
+        <section class="rounded-3xl bg-white p-4 text-sm leading-6 text-slate-600 shadow-soft ring-1 ring-sky-100">
+          <p class="font-bold text-slate-900">Dự án</p>
+          <p class="mt-2"><strong>Đơn vị:</strong> Trường THCS Hoài Phú</p>
+          <p><strong>HS:</strong> Phạm Lê Thế Dân</p>
+          <p><strong>GVHD:</strong> Nguyễn Phương Tây</p>
+        </section>
+      </aside>
+
+      <main class="flex min-h-0 flex-col overflow-hidden rounded-[28px] bg-white shadow-soft ring-1 ring-sky-100">
+        <div class="border-b border-sky-100 bg-white px-4 py-3 sm:px-5">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-[0.18em] text-blue-500">Trợ lý học tập</p>
+              <h2 class="mt-1 text-lg font-extrabold text-slate-950 sm:text-xl">Hỏi bài Toán bằng tiếng Việt hoặc tiếng Anh</h2>
             </div>
+            <div class="flex gap-2 overflow-x-auto pb-1 md:hidden">
+              <button class="quick-topic flex-none rounded-full bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 ring-1 ring-emerald-100" data-prompt="Thầy hãy giải thích một bài số học THCS cơ bản.">Số học</button>
+              <button class="quick-topic flex-none rounded-full bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 ring-1 ring-blue-100" data-prompt="Thầy hãy giúp con ôn đại số THCS.">Đại số</button>
+              <button class="quick-topic flex-none rounded-full bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 ring-1 ring-amber-100" data-prompt="Thầy hãy hướng dẫn con một bài hình học THCS.">Hình học</button>
+              <button class="quick-topic flex-none rounded-full bg-fuchsia-50 px-3 py-2 text-xs font-bold text-fuchsia-700 ring-1 ring-fuchsia-100" data-prompt="Thầy hãy cho con một ví dụ về xác suất hoặc thống kê THCS.">Xác suất</button>
+            </div>
+          </div>
         </div>
+
+        <div id="chat-messages" class="chat-scroll flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-gradient-to-b from-sky-50 to-white px-4 py-5 sm:px-5 lg:px-8">
+          <div class="mx-auto w-full max-w-3xl rounded-[28px] border border-sky-100 bg-white p-5 text-center shadow-sm">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
+              <i class="fas fa-robot text-xl"></i>
+            </div>
+            <h3 class="mt-4 text-lg font-extrabold text-slate-950">Xin chào, thầy sẵn sàng hỗ trợ con học Toán.</h3>
+            <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-600">Nhập bài toán, khái niệm, hoặc chủ đề con muốn ôn. Câu trả lời sẽ được trình bày từng bước Anh - Việt.</p>
+            <div class="mt-4 flex flex-wrap justify-center gap-2">
+              <span class="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-100">Số học</span>
+              <span class="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 ring-1 ring-blue-100">Đại số</span>
+              <span class="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 ring-1 ring-amber-100">Hình học</span>
+              <span class="rounded-full bg-fuchsia-50 px-3 py-1.5 text-xs font-bold text-fuchsia-700 ring-1 ring-fuchsia-100">Xác suất</span>
+            </div>
+          </div>
+        </div>
+
+        <form id="chat-form" class="border-t border-sky-100 bg-white p-3 sm:p-4">
+          <div class="flex items-end gap-2 rounded-[24px] bg-slate-50 p-2 ring-1 ring-slate-200 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100">
+            <input
+              type="text"
+              id="message"
+              placeholder="Nhập câu hỏi Toán học..."
+              class="min-h-12 flex-1 bg-transparent px-3 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 sm:text-base"
+              autocomplete="off"
+            />
+            <button
+              id="send-btn"
+              type="submit"
+              class="flex h-12 flex-none items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98] sm:px-5"
+            >
+              <i class="fas fa-paper-plane"></i>
+              <span class="hidden sm:inline">Gửi</span>
+            </button>
+          </div>
+        </form>
+      </main>
     </div>
+  </div>
 
-    <script>
-        const chatForm = document.getElementById('send-btn');
-        const messageInput = document.getElementById('message');
-        const chatMessages = document.getElementById('chat-messages');
-        const levelIndicator = document.getElementById('user-level');
-        let previousLevel = '{{ user_level }}';
+  <script id="initial-state" type="application/json">{{ {"level": user_level, "score": user_score}|tojson }}</script>
+  <script>
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message');
+    const chatMessages = document.getElementById('chat-messages');
+    const levelIndicator = document.getElementById('user-level');
+    const scoreIndicator = document.getElementById('user-score');
+    const initialState = JSON.parse(document.getElementById('initial-state').textContent);
+    let previousLevel = initialState.level;
 
-        function scrollToBottom() {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+    function scrollToBottom() {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      const d = document.createElement('div');
+      d.textContent = text;
+      return d.innerHTML;
+    }
+
+    function addUserMessage(text) {
+      const row = document.createElement('div');
+      row.className = 'msg-row user';
+      row.innerHTML = `
+        <div class="msg-avatar"><i class="fas fa-user"></i></div>
+        <div class="msg-bubble">${escapeHtml(text)}</div>
+      `;
+      chatMessages.appendChild(row);
+      scrollToBottom();
+    }
+
+    function addAIMessage(html) {
+      const row = document.createElement('div');
+      row.className = 'msg-row ai';
+      row.innerHTML = `
+        <div class="msg-avatar"><i class="fas fa-robot"></i></div>
+        <div class="msg-bubble mathjax-container">${html}</div>
+      `;
+      chatMessages.appendChild(row);
+      scrollToBottom();
+
+      if (window.MathJax) {
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub, row]);
+      }
+    }
+
+    function showTyping() {
+      const row = document.createElement('div');
+      row.className = 'typing-row';
+      row.innerHTML = `
+        <div class="msg-avatar"><i class="fas fa-robot"></i></div>
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+      `;
+      chatMessages.appendChild(row);
+      scrollToBottom();
+      return row;
+    }
+
+    function setSending(isSending) {
+      const sendBtn = document.getElementById('send-btn');
+      sendBtn.disabled = isSending;
+      sendBtn.classList.toggle('opacity-70', isSending);
+      sendBtn.classList.toggle('cursor-not-allowed', isSending);
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+      const msg = messageInput.value.trim();
+      if (!msg) return;
+
+      addUserMessage(msg);
+      messageInput.value = '';
+      setSending(true);
+
+      const typing = showTyping();
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+
+        if (typing.parentNode) typing.parentNode.removeChild(typing);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        addAIMessage(data.response || '⚠️ Không thể trả lời lúc này.');
+
+        if (data.level && data.level !== previousLevel) {
+          levelIndicator.textContent = data.level;
+          previousLevel = data.level;
         }
 
-        function addUserMessage(text) {
-            const row = document.createElement('div');
-            row.className = 'msg-row user';
-            row.innerHTML = `
-                <div class="msg-avatar"><i class="fas fa-user"></i></div>
-                <div class="msg-bubble">${escapeHtml(text)}</div>
-            `;
-            chatMessages.appendChild(row);
-            scrollToBottom();
+        if (typeof data.score !== 'undefined') {
+          scoreIndicator.textContent = `${data.score}/100`;
         }
-
-        function addAIMessage(html) {
-            const row = document.createElement('div');
-            row.className = 'msg-row ai';
-            row.innerHTML = `
-                <div class="msg-avatar"><i class="fas fa-robot"></i></div>
-                <div class="msg-bubble mathjax-container">${html}</div>
-            `;
-            chatMessages.appendChild(row);
-            scrollToBottom();
-            // MathJax render
-            if (window.MathJax) {
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub, row]);
-            }
-        }
-
-        function escapeHtml(text) {
-            const d = document.createElement('div');
-            d.textContent = text;
-            return d.innerHTML;
-        }
-
-        function showTyping() {
-            const row = document.createElement('div');
-            row.className = 'typing-row';
-            row.innerHTML = `
-                <div class="msg-avatar" style="background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <div class="typing-dots">
-                    <span></span><span></span><span></span>
-                </div>
-            `;
-            chatMessages.appendChild(row);
-            scrollToBottom();
-            return row;
-        }
-
-        async function handleSubmit(e) {
-            e.preventDefault();
-            const msg = messageInput.value.trim();
-            if (!msg) return;
-
-            addUserMessage(msg);
-            messageInput.value = '';
-
-            const typing = showTyping();
-
-            try {
-                const res = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg })
-                });
-
-                if (typing.parentNode) typing.parentNode.removeChild(typing);
-
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-
-                addAIMessage(data.response || '⚠️ Không thể trả lời lúc này.');
-
-                if (data.level && data.level !== previousLevel) {
-                    levelIndicator.textContent = data.level;
-                    previousLevel = data.level;
-                }
-            } catch (err) {
-                console.error(err);
-                if (typing.parentNode) typing.parentNode.removeChild(typing);
-                addAIMessage('<span style="color:var(--danger);"><i class="fas fa-exclamation-triangle"></i> Lỗi kết nối. Vui lòng thử lại.</span>');
-            }
-
-            messageInput.focus();
-        }
-
-        chatForm.addEventListener('click', handleSubmit);
-        messageInput.addEventListener('keypress', e => { if (e.key === 'Enter') handleSubmit(e); });
+      } catch (err) {
+        console.error(err);
+        if (typing.parentNode) typing.parentNode.removeChild(typing);
+        addAIMessage('<span style="color:var(--danger);"><i class="fas fa-exclamation-triangle"></i> Lỗi kết nối. Vui lòng thử lại.</span>');
+      } finally {
+        setSending(false);
         messageInput.focus();
-    </script>
+      }
+    }
+
+    document.querySelectorAll('.quick-topic').forEach((button) => {
+      button.addEventListener('click', () => {
+        messageInput.value = button.dataset.prompt || '';
+        messageInput.focus();
+      });
+    });
+
+    chatForm.addEventListener('submit', handleSubmit);
+    messageInput.focus();
+  </script>
 </body>
 </html>
