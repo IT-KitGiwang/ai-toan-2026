@@ -12,22 +12,37 @@ from werkzeug.utils import secure_filename
 import firebase_admin
 from firebase_admin import auth, credentials, firestore
 # ================== CẤU HÌNH & KHỞI TẠO ==================
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-if not OPENROUTER_API_KEY:
-    raise ValueError("❌ Không tìm thấy OPENROUTER_API_KEY trong biến môi trường!")
+DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
+GENERATION_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
+_deepseek_client = None
 
-# Khởi tạo OpenAI client trỏ đến OpenRouter
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
-)
 
-GENERATION_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
+class DeepSeekConfigurationError(RuntimeError):
+    pass
+
+
+def get_deepseek_client():
+    """Khởi tạo DeepSeek khi chức năng AI thực sự được gọi."""
+    global _deepseek_client
+
+    if _deepseek_client is not None:
+        return _deepseek_client
+
+    api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
+    if not api_key:
+        raise DeepSeekConfigurationError(
+            "Thiếu DEEPSEEK_API_KEY. Hãy thêm biến này trong Vercel Project Settings > Environment Variables."
+        )
+
+    _deepseek_client = OpenAI(base_url=DEEPSEEK_BASE_URL, api_key=api_key)
+    return _deepseek_client
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY")
-if not app.secret_key:
-    raise ValueError("❌ Không tìm thấy FLASK_SECRET_KEY trong biến môi trường!")
+app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.urandom(32)
+if not os.getenv("FLASK_SECRET_KEY"):
+    app.logger.warning(
+        "Thiếu FLASK_SECRET_KEY; đang dùng khóa tạm. Hãy cấu hình biến này trên Vercel để phiên đăng nhập ổn định."
+    )
 
 # Cấu hình upload folder cho PDF
 UPLOAD_FOLDER = './static'
@@ -55,7 +70,15 @@ def initialize_firebase():
     firebase_admin.initialize_app(cred)
     return firestore.client()
 
-firebase_db = initialize_firebase()
+firebase_db = None
+
+
+def get_firebase_db():
+    """Khởi tạo Firebase Admin khi có request cần xác thực hoặc dữ liệu."""
+    global firebase_db
+    if firebase_db is None:
+        firebase_db = initialize_firebase()
+    return firebase_db
 
 def get_firebase_web_config():
     return {
@@ -69,7 +92,7 @@ def get_firebase_web_config():
     }
 
 def get_user_ref(uid):
-    return firebase_db.collection(FIREBASE_COLLECTION).document(uid)
+    return get_firebase_db().collection(FIREBASE_COLLECTION).document(uid)
 
 def score_from_level(level):
     return {
@@ -116,11 +139,12 @@ def save_student(uid, data):
 
 def list_students():
     students = []
-    for doc in firebase_db.collection(FIREBASE_COLLECTION).stream():
+    for doc in get_firebase_db().collection(FIREBASE_COLLECTION).stream():
         students.append(normalize_student(doc.id, doc.to_dict()))
     return sorted(students, key=lambda item: item["name"].lower())
 
 def login_with_firebase_token(id_token, submitted_name=""):
+    get_firebase_db()
     decoded_token = auth.verify_id_token(id_token)
     uid = decoded_token["uid"]
     email = (decoded_token.get("email") or "").lower()
@@ -168,7 +192,8 @@ def allowed_file(filename):
 # Biến toàn cục lưu nội dung tài liệu PDF
 DOCUMENT_CONTEXT = {
     "text": "",
-    "is_ready": False
+    "is_ready": False,
+    "is_loaded": False,
 }
 
 # ================== ĐỌC TÀI LIỆU PDF ==================
@@ -180,43 +205,50 @@ def extract_pdf_text(pdf_path):
             for page in reader.pages:
                 text += page.extract_text() or ""
     except Exception as e:
-        print(f"⚠️ Lỗi khi đọc PDF {pdf_path}: {e}")
+        app.logger.warning("Không thể đọc PDF %s: %s", pdf_path, e)
     return text
 
 def load_all_documents(directory='./static'):
     """Đọc toàn bộ nội dung PDF và ghép thành một chuỗi văn bản."""
     all_text = ""
     if not os.path.exists(directory):
-        print(f"Thư mục {directory} không tồn tại.")
+        app.logger.info("Thư mục tài liệu %s không tồn tại.", directory)
         return ""
     pdf_files = [f for f in os.listdir(directory) if f.endswith('.pdf')]
-    print(f"🔍 Tìm thấy {len(pdf_files)} tệp PDF trong {directory}...")
+    app.logger.info("Tìm thấy %s tệp PDF trong %s.", len(pdf_files), directory)
     for filename in pdf_files:
         pdf_path = os.path.join(directory, filename)
         content = extract_pdf_text(pdf_path)
         if content.strip():
             all_text += f"\n\n===== [Tài liệu: {filename}] =====\n{content}"
     total_chars = len(all_text)
-    print(f"✅ Đã đọc tổng cộng {total_chars:,} ký tự từ {len(pdf_files)} tài liệu.")
+    app.logger.info("Đã đọc %s ký tự từ %s tài liệu PDF.", total_chars, len(pdf_files))
     return all_text
 
 def initialize_documents():
     """Tải toàn bộ tài liệu PDF vào bộ nhớ."""
     global DOCUMENT_CONTEXT
-    print("⏳ Đang tải tài liệu...")
+    app.logger.info("Bắt đầu tải tài liệu PDF.")
     doc_text = load_all_documents()
     if not doc_text.strip():
-        print("⚠️ Không có tài liệu PDF nào để tải.")
-        DOCUMENT_CONTEXT["text"] = ""  # Xóa sạch text cũ
-        DOCUMENT_CONTEXT["is_ready"] = False
+        app.logger.info("Không có tài liệu PDF để tải.")
+        DOCUMENT_CONTEXT.update({
+            "text": "",
+            "is_ready": False,
+            "is_loaded": True,
+        })
         return
     DOCUMENT_CONTEXT.update({
         "text": doc_text,
-        "is_ready": True
+        "is_ready": True,
+        "is_loaded": True,
     })
-    print("🎉 Tải tài liệu hoàn tất!")
+    app.logger.info("Tải tài liệu PDF hoàn tất.")
 
-initialize_documents()
+
+def ensure_documents_loaded():
+    if not DOCUMENT_CONTEXT["is_loaded"]:
+        initialize_documents()
 
 # ================== ĐÁNH GIÁ NĂNG LỰC ==================
 def evaluate_student_level(history):
@@ -257,7 +289,7 @@ def evaluate_student_level(history):
     """
 
     try:
-        response = client.chat.completions.create(
+        response = get_deepseek_client().chat.completions.create(
             model=GENERATION_MODEL,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -392,6 +424,7 @@ def index():
     if 'user_id' not in session:
         flash('Vui lòng đăng nhập để tiếp tục.', 'error')
         return redirect(url_for('login'))
+    ensure_documents_loaded()
     rag_status = "✅ Đã tải tài liệu thành công" if DOCUMENT_CONTEXT["is_ready"] else "⚠️ Chưa tải được tài liệu."
     user = get_student(session['user_id'])
     return render_template('index.html', rag_status=rag_status, user_level=user['level'], user_score=user['score'])
@@ -405,6 +438,7 @@ def chat():
     if not user_message:
         return jsonify({'response': format_response('Con hãy nhập câu hỏi nhé!')})
 
+    ensure_documents_loaded()
     user = get_student(session['user_id'])
     history = split_history(user['history'])
     history.append(f"👧 Học sinh: {user_message}")
@@ -487,7 +521,7 @@ $$x + 2 = 5$$
 
 
     try:
-        response = client.chat.completions.create(
+        response = get_deepseek_client().chat.completions.create(
             model=GENERATION_MODEL,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -524,9 +558,18 @@ $$x + 2 = 5$$
             'score': new_score,
         })
 
+    except DeepSeekConfigurationError as e:
+        app.logger.error("Cấu hình DeepSeek chưa đầy đủ: %s", e)
+        return jsonify({
+            'response': format_response("Hệ thống AI chưa được cấu hình. Vui lòng báo quản trị viên."),
+            'error': 'DEEPSEEK_NOT_CONFIGURED',
+        }), 503
     except Exception as e:
-        print(f"❌ Lỗi AI: {e}")
-        return jsonify({'response': format_response("Thầy AI hơi mệt, con thử lại sau nhé!")})
+        app.logger.exception("Lỗi khi gọi DeepSeek: %s", e)
+        return jsonify({
+            'response': format_response("Thầy AI hơi mệt, con thử lại sau nhé!"),
+            'error': 'DEEPSEEK_REQUEST_FAILED',
+        }), 502
 # QUẢN LÝ HỌC SINH
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
